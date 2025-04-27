@@ -6,6 +6,9 @@ import BookDetails from "./pages/BookDetails";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Audio from "./pages/Audio";
+import Ebook from "./pages/Ebook";
+
 
 
 function App() {
@@ -19,6 +22,9 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/audio" element={<Audio />} />
+        <Route path="/ebooks" element={<Ebook />} />
+
 
       </Routes>
     </Router>
