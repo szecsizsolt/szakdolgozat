@@ -8,25 +8,40 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Audio from "./pages/Audio";
 import Ebook from "./pages/Ebook";
-
+import Footer from "./components/Footer";
+import Kapcsolat from "./pages/info/Kapcsolat";
+import GYIK from "./pages/info/GYIK";
+import Adatvedelem from "./pages/info/Adatvedelem";
+import Aszf from "./pages/info/Aszf";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 
 
 function App() {
   return (
     <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/books" element={<BookList />} />
-        <Route path="/book" element={<BookDetails />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/audio" element={<Audio />} />
-        <Route path="/ebooks" element={<Ebook />} />
-
-
-      </Routes>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <div className="flex-grow">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/books" element={<BookList />} />
+            <Route path="/book" element={<BookDetails />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/audio" element={<Audio />} />
+            <Route path="/ebooks" element={<Ebook />} />
+            <Route path="/kapcsolat" element={<Kapcsolat />} />
+            <Route path="/gyik" element={<GYIK />} />
+            <Route path="/adatvedelem" element={<Adatvedelem />} />
+            <Route path="/aszf" element={<Aszf />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogPost />} />
+          </Routes>
+        </div>
+        <Footer />
+      </div>
     </Router>
   );
 }

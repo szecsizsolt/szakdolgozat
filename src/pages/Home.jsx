@@ -2,6 +2,9 @@ import BookCard from "../components/BookCard";
 import Carousel from "../components/Carousel";
 import CategorySlider from "../components/CategorySlider";
 import placeholderImage from "../assets/peldakonyv.png";
+import CustomerReviews from "../components/CustomerReviews";
+import NewsletterSignup from "../components/NewsletterSignup";
+import SearchBar from "../components/SearchBar";
 
 const dummyBooks = [
   { id: 1, title: "Az alkimista", author: "Paulo Coelho", price: 2990, image: placeholderImage },
@@ -18,25 +21,12 @@ const Home = () => {
   return (
     <div className="max-w-screen-xl mx-auto px-4 space-y-10 py-6">
       
-      {/* 🔍 Kereső */}
-      <div className="flex justify-center">
-        <div className="relative w-full max-w-4xl">
-          <input
-            type="text"
-            placeholder="Keresés könyvre, szerzőre..."
-            className="w-full px-12 py-3 rounded-full shadow-md border border-gray-300 focus:ring-2 focus:ring-yellow-400"
-          />
-          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">🔍</span>
-        </div>
-      </div>
+      <SearchBar />
 
-      {/* 🎞️ Karusszel */}
       <Carousel />
 
-      {/* 📂 Kategóriák */}
       <CategorySlider />
 
-      {/* 📚 Ajánlott könyvek */}
       <section>
         <h2 className="text-2xl font-extrabold text-center text-green-900 border-b-2 border-yellow-400 w-fit mx-auto pb-2">
           📚 Ajánlott könyvek
@@ -47,6 +37,11 @@ const Home = () => {
           ))}
         </div>
       </section>
+
+      <CustomerReviews />
+
+      <NewsletterSignup />
+
     </div>
   );
 };
