@@ -15,6 +15,9 @@ import Adatvedelem from "./pages/info/Adatvedelem";
 import Aszf from "./pages/info/Aszf";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import AdminPage from "./pages/AdminPage";
+import AdminRoute from "./components/AdminRoute";
+import Profile from "./pages/Profile";
 
 
 function App() {
@@ -38,6 +41,8 @@ function App() {
             <Route path="/aszf" element={<Aszf />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:id" element={<BlogPost />} />
+            <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </div>
         <Footer />

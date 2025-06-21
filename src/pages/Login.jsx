@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
+
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -11,9 +13,31 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      alert("Sikeres bejelentkezés!");
-      navigate("/");
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCred.user.uid;
+
+      // Szerepkör lekérdezése Firestore-ból
+      const docRef = doc(db, "users", uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const role = userData.role;
+
+        // Tárolás localStorage-be (opcionális)
+        localStorage.setItem("role", role);
+
+        alert("Sikeres bejelentkezés!");
+        // Irányítás role alapján
+        if (role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+      } else {
+        alert("Nincs jogosultság (nincs user dokumentum).");
+      }
+
     } catch (error) {
       console.error("Bejelentkezési hiba:", error);
       alert("Hiba történt: " + error.message);

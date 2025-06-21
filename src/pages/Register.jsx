@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -23,11 +24,20 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      alert("Sikeres regisztráció!");
+      const userCred = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const uid = userCred.user.uid;
+
+      await setDoc(doc(db, "users", uid), {
+        uid,
+        email: formData.email,
+        name: `${formData.firstName} ${formData.lastName}`,
+        role: "user", // default role
+      });
+
+      alert("✅ Sikeres regisztráció!");
       navigate("/login");
     } catch (error) {
-      console.error("Regisztrációs hiba:", error);
+      console.error("❌ Regisztrációs hiba:", error);
       alert("Hiba történt: " + error.message);
     }
   };
@@ -76,7 +86,10 @@ export default function Register() {
           className="w-full border px-4 py-2 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
 
-        <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2 rounded shadow transition">
+        <button
+          type="submit"
+          className="w-full bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2 rounded shadow transition"
+        >
           Regisztráció
         </button>
       </form>
