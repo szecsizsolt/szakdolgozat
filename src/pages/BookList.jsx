@@ -1,30 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BookCard from "../components/BookCard";
-import placeholderImage from "../assets/peldakonyv.png";
-
-const allBooks = [
-  { id: 1, title: "Az alkimista", author: "Paulo Coelho", price: 2990, image: placeholderImage, category: "Regény" },
-  { id: 2, title: "1984", author: "George Orwell", price: 3490, image: placeholderImage, category: "Tudomány" },
-  { id: 3, title: "A Gyűrűk Ura", author: "J.R.R. Tolkien", price: 5990, image: placeholderImage, category: "Regény" },
-  { id: 4, title: "Harry Potter", author: "J.K. Rowling", price: 3990, image: placeholderImage, category: "Fantasy" },
-  { id: 5, title: "A Hobbit", author: "J.R.R. Tolkien", price: 2790, image: placeholderImage, category: "Fantasy" },
-  { id: 6, title: "Büszkeség és balítélet", author: "Jane Austen", price: 3190, image: placeholderImage, category: "Regény" },
-  { id: 7, title: "Dűne", author: "Frank Herbert", price: 4990, image: placeholderImage, category: "Sci-fi" },
-  { id: 8, title: "A szolgálólány meséje", author: "Margaret Atwood", price: 3590, image: placeholderImage, category: "Tudomány" },
-];
-
-const categories = [
-  "Regény", "Gyerek", "Életmód", "Tudomány", "Történelem", "Fantasy", "Sci-fi"
-];
 
 export default function BookList() {
+  const [books, setBooks] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("Összes");
   const [sortBy, setSortBy] = useState("");
+  const CATEGORY_OPTIONS = [
+  "Szépirodalom",
+  "Ismeretterjesztő",
+  "Krimi",
+  "Romantikus",
+  "Sci-fi",
+  "Fantasy",
+  "Életrajz",
+  "Önfejlesztés",
+  "Történelem",
+  "Gyermekkönyv",
+  "Ifjúsági",
+  "Thriller",
+  "Üzleti",
+  "Egészség és életmód",
+  "Utazás",
+];
+
+const [categories] = useState(CATEGORY_OPTIONS);
+
+
+useEffect(() => {
+  // Könyvek betöltése
+  fetch("http://localhost:3001/books")
+    .then((res) => res.json())
+    .then((data) => {
+      // Ha az URL relatív, egészítsd ki a szerver címével
+      const updated = data.map((book) => ({
+        ...book,
+        cover_image_url: book.cover_image_url?.startsWith("http")
+          ? book.cover_image_url
+          : `http://localhost:3001${book.cover_image_url}`,
+      }));
+      setBooks(updated);
+    })
+    .catch((err) => console.error("Könyv hiba:", err));
+  }, []);
 
   const filteredBooks =
     selectedCategory === "Összes"
-      ? allBooks
-      : allBooks.filter((book) => book.category === selectedCategory);
+      ? books
+      : books.filter((book) => book.categories?.includes(selectedCategory));
 
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
@@ -49,22 +71,27 @@ export default function BookList() {
         <button
           onClick={() => setSelectedCategory("Összes")}
           className={`px-4 py-2 rounded-full text-sm font-semibold border ${
-            selectedCategory === "Összes" ? "bg-green-600 text-white" : "bg-white text-green-700 border-green-300 hover:bg-green-100"
+            selectedCategory === "Összes"
+              ? "bg-green-600 text-white"
+              : "bg-white text-green-700 border-green-300 hover:bg-green-100"
           }`}
         >
           Összes
         </button>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold border ${
-              selectedCategory === cat ? "bg-green-600 text-white" : "bg-white text-green-700 border-green-300 hover:bg-green-100"
-            }`}
-          >
-            {cat}
-          </button>
+          {categories.map((cat) => (
+        <button
+          key={cat}
+          onClick={() => setSelectedCategory(cat)}
+          className={`px-4 py-2 rounded-full text-sm font-semibold border ${
+            selectedCategory === cat
+              ? "bg-green-600 text-white"
+              : "bg-white text-green-700 border-green-300 hover:bg-green-100"
+          }`}
+        >
+          {cat}
+        </button>
         ))}
+
       </div>
 
       <div className="mb-6">

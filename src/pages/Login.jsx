@@ -4,6 +4,34 @@ import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 
+const handleLogin = async () => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // 🔑 Token lekérése
+    const token = await user.getIdToken();
+
+    // 📬 Backend regisztráció / hitelesítés
+    await fetch("http://localhost:3001/register", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: user.displayName || "Név nincs",
+        email: user.email,
+      }),
+    });
+
+    console.log("Sikeres bejelentkezés és regisztráció a backendnél");
+    // Navigálás vagy állapotfrissítés itt
+  } catch (error) {
+    console.error("Bejelentkezési hiba:", error);
+    setError("Hibás email vagy jelszó");
+  }
+};
 
 export default function Login() {
   const [email, setEmail] = useState("");

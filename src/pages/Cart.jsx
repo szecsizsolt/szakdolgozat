@@ -1,46 +1,75 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import placeholderImage from "../assets/peldakonyv.png";
-
-const initialCart = [
-  {
-    id: 1,
-    title: "Az Alkimista",
-    author: "Paulo Coelho",
-    price: 2990,
-    quantity: 1,
-    image: placeholderImage,
-  },
-  {
-    id: 2,
-    title: "1984",
-    author: "George Orwell",
-    price: 3490,
-    quantity: 2,
-    image: placeholderImage,
-  },
-];
+import { getAuth } from "firebase/auth";
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState(initialCart);
+  const [cartItems, setCartItems] = useState([]);
+  const auth = getAuth();
 
-  const removeFromCart = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
+  const fetchCart = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const token = await user.getIdToken();
+    const res = await fetch("http://localhost:3001/cart", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    setCartItems(data);
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  const updateQuantity = async (id, newQuantity) => {
+    if (newQuantity < 1) return;
+
+    const user = auth.currentUser;
+    const token = await user.getIdToken();
+
+    await fetch(`http://localhost:3001/cart/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ quantity: newQuantity }),
+    });
+
+    fetchCart();
   };
 
-  const updateQuantity = (id, change) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + change) }
-          : item
-      )
-    );
+  const removeFromCart = async (id) => {
+    const user = auth.currentUser;
+    const token = await user.getIdToken();
+
+    await fetch(`http://localhost:3001/cart/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    fetchCart();
+  };
+
+  const clearCart = async () => {
+    const user = auth.currentUser;
+    const token = await user.getIdToken();
+
+    await fetch("http://localhost:3001/cart", {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    fetchCart();
   };
 
   const total = cartItems.reduce(
@@ -72,7 +101,7 @@ export default function Cart() {
               >
                 <div className="flex items-center gap-4">
                   <img
-                    src={item.image}
+                    src={item.cover_image_url}
                     alt={item.title}
                     className="w-20 h-28 object-cover rounded-md border bg-white"
                   />

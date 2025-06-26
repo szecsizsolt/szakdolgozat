@@ -8,10 +8,12 @@ import { onAuthStateChanged } from "firebase/auth";
 export default function Navbar() {
   const [hover, setHover] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // 🔐 Lekérjük a Firestore user adatokat
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -19,31 +21,46 @@ export default function Navbar() {
         } else {
           setUserData(null);
         }
+
+        // 🛒 Lekérjük a kosár tartalmat a backendről
+        try {
+          const token = await user.getIdToken();
+          const res = await fetch("http://localhost:3001/cart", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            setCartItems(data);
+          } else {
+            setCartItems([]);
+          }
+        } catch (err) {
+          console.error("Kosár lekérési hiba:", err);
+          setCartItems([]);
+        }
       } else {
         setUserData(null);
+        setCartItems([]);
       }
     });
 
     return () => unsubscribe();
   }, []);
 
-  const cartItems = [
-    { title: "1984", price: 3490 },
-    { title: "Dűne", price: 4990 },
-  ];
-
   return (
     <nav className="bg-[#f8f4db] shadow-md py-6 relative z-50">
       <div className="max-w-[1280px] mx-auto px-4 flex justify-between items-center relative">
+
         {/* Bal oldal: Site név */}
         <Link
           to="/"
           className="text-3xl font-bold text-olive-800 flex items-center gap-2"
         >
-          📚 <span>Site name</span>
+          📚 <span>Könyvesbolt</span>
         </Link>
 
-        {/* Menü középen */}
+        {/* Középső menü */}
         <div className="absolute left-1/2 transform -translate-x-1/2 flex gap-12 text-lg text-olive-800 font-medium">
           <Link to="/books" className="hover:underline">Könyvek</Link>
           <Link to="/ebooks" className="hover:underline">E-könyvek</Link>
@@ -57,7 +74,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Jobb oldal: csak bejelentkezett felhasználóknak */}
+        {/* Jobb oldal */}
         <div className="flex items-center gap-4">
           {userData ? (
             <>
@@ -76,22 +93,27 @@ export default function Navbar() {
                   )}
                 </Link>
 
+                {/* Lebegő kosár */}
                 {hover && (
                   <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 rounded-xl shadow-lg p-4 text-sm text-olive-800 z-50">
                     <h3 className="font-semibold mb-2">Kosár</h3>
-                    <ul className="space-y-1">
-                      {cartItems.map((item, idx) => (
-                        <li key={idx} className="flex justify-between">
-                          <span>{item.title}</span>
-                          <span>{item.price} Ft</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {cartItems.length === 0 ? (
+                      <p className="text-gray-500">A kosarad üres</p>
+                    ) : (
+                      <ul className="space-y-1">
+                        {cartItems.map((item, idx) => (
+                          <li key={idx} className="flex justify-between">
+                            <span>{item.title}</span>
+                            <span>{(item.price * item.quantity).toLocaleString()} Ft</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Profil gomb */}
+              {/* Profil link */}
               <Link
                 to="/profile"
                 className="bg-yellow-400 hover:bg-yellow-500 px-3 py-1.5 text-sm rounded shadow font-bold"
@@ -101,7 +123,6 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              {/* Ha nincs bejelentkezve */}
               <Link
                 to="/login"
                 className="bg-yellow-400 hover:bg-yellow-500 px-3 py-1.5 text-sm rounded shadow font-bold"

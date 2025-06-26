@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Firebase Email/Jelszó Token lekérő</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <h2>Email/Jelszavas Bejelentkezés Firebase-re</h2>
+
+  <input type="email" id="email" placeholder="Email">
+  <br>
+  <input type="password" id="password" placeholder="Jelszó">
+  <br>
+  <button onclick="loginWithEmail()">Bejelentkezés</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0ltAS6Y-33u5bgyOUcRPG0n28QkjeG-w",
+      authDomain: "online-bookstore-1dd4c.firebaseapp.com",
+      projectId: "online-bookstore-1dd4c",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    async function loginWithEmail() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const token = await result.user.getIdToken();
+        document.getElementById("output").textContent = token;
+        console.log("ID token:", token);
+      } catch (err) {
+        document.getElementById("output").textContent = "Hiba: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -29,7 +29,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/books" element={<BookList />} />
-            <Route path="/book" element={<BookDetails />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -43,6 +42,7 @@ function App() {
             <Route path="/blog/:id" element={<BlogPost />} />
             <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/book/:id" element={<BookDetails />} />
           </Routes>
         </div>
         <Footer />
