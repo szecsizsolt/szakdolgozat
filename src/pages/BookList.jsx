@@ -6,47 +6,54 @@ export default function BookList() {
   const [selectedCategory, setSelectedCategory] = useState("Összes");
   const [sortBy, setSortBy] = useState("");
   const CATEGORY_OPTIONS = [
-  "Szépirodalom",
-  "Ismeretterjesztő",
-  "Krimi",
-  "Romantikus",
-  "Sci-fi",
-  "Fantasy",
-  "Életrajz",
-  "Önfejlesztés",
-  "Történelem",
-  "Gyermekkönyv",
-  "Ifjúsági",
-  "Thriller",
-  "Üzleti",
-  "Egészség és életmód",
-  "Utazás",
-];
+    "Szépirodalom",
+    "Ismeretterjesztő",
+    "Krimi",
+    "Romantikus",
+    "Sci-fi",
+    "Fantasy",
+    "Életrajz",
+    "Önfejlesztés",
+    "Történelem",
+    "Gyermekkönyv",
+    "Ifjúsági",
+    "Thriller",
+    "Üzleti",
+    "Egészség és életmód",
+    "Utazás",
+  ];
+  const [categories] = useState(CATEGORY_OPTIONS);
 
-const [categories] = useState(CATEGORY_OPTIONS);
+  useEffect(() => {
+    fetch("http://localhost:3001/books")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data)) {
+          console.error("Nem tömb típusú válasz:", data);
+          setBooks([]);
+          return;
+        }
 
-
-useEffect(() => {
-  // Könyvek betöltése
-  fetch("http://localhost:3001/books")
-    .then((res) => res.json())
-    .then((data) => {
-      // Ha az URL relatív, egészítsd ki a szerver címével
-      const updated = data.map((book) => ({
-        ...book,
-        cover_image_url: book.cover_image_url?.startsWith("http")
-          ? book.cover_image_url
-          : `http://localhost:3001${book.cover_image_url}`,
-      }));
-      setBooks(updated);
-    })
-    .catch((err) => console.error("Könyv hiba:", err));
+        const updated = data.map((book) => ({
+          ...book,
+          cover_image_url: book.cover_image_url?.startsWith("http")
+            ? book.cover_image_url
+            : `http://localhost:3001${book.cover_image_url}`,
+        }));
+        setBooks(updated);
+      })
+      .catch((err) => {
+        console.error("Könyv lekérési hiba:", err);
+        setBooks([]);
+      });
   }, []);
 
   const filteredBooks =
     selectedCategory === "Összes"
       ? books
-      : books.filter((book) => book.categories?.includes(selectedCategory));
+      : books.filter((book) =>
+          book.categories?.includes(selectedCategory)
+        );
 
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
@@ -78,20 +85,19 @@ useEffect(() => {
         >
           Összes
         </button>
-          {categories.map((cat) => (
-        <button
-          key={cat}
-          onClick={() => setSelectedCategory(cat)}
-          className={`px-4 py-2 rounded-full text-sm font-semibold border ${
-            selectedCategory === cat
-              ? "bg-green-600 text-white"
-              : "bg-white text-green-700 border-green-300 hover:bg-green-100"
-          }`}
-        >
-          {cat}
-        </button>
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold border ${
+              selectedCategory === cat
+                ? "bg-green-600 text-white"
+                : "bg-white text-green-700 border-green-300 hover:bg-green-100"
+            }`}
+          >
+            {cat}
+          </button>
         ))}
-
       </div>
 
       <div className="mb-6">

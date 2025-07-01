@@ -15,9 +15,12 @@ import Adatvedelem from "./pages/info/Adatvedelem";
 import Aszf from "./pages/info/Aszf";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
-import AdminPage from "./pages/AdminPage";
 import AdminRoute from "./components/AdminRoute";
 import Profile from "./pages/Profile";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageBook from "./pages/admin/ManageBook";
+import ManageEBook from "./pages/admin/ManageEBook";
+import ManageAudioBook from "./pages/admin/ManageAudioBook";
 
 
 function App() {
@@ -40,7 +43,10 @@ function App() {
             <Route path="/aszf" element={<Aszf />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:id" element={<BlogPost />} />
-            <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/add-book" element={<AdminRoute><ManageBook /></AdminRoute>} />
+            <Route path="/admin/ebook" element={<AdminRoute><ManageEBook /></AdminRoute>} />
+            <Route path="/admin/audio" element={<AdminRoute><ManageAudioBook /></AdminRoute>} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/book/:id" element={<BookDetails />} />
           </Routes>

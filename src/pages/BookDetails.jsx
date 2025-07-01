@@ -4,15 +4,6 @@ import { FaShoppingCart, FaStar, FaTrash } from "react-icons/fa";
 import { getAuth } from "firebase/auth";
 import { addToCartBackend } from "../utils/cart";
 
-const handleAddToCart = async () => {
-  try {
-    await addToCartBackend(book.id);
-    alert("Kosárba helyezve!");
-  } catch (err) {
-    alert("Hiba: " + err.message);
-  }
-};
-
 export default function BookDetails() {
   const { id } = useParams();
   const [book, setBook] = useState(null);
@@ -33,39 +24,6 @@ export default function BookDetails() {
       });
   }, [id]);
 
-  const handleAddToCart = async () => {
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) return alert("Jelentkezz be a kosár használatához!");
-
-      const token = await user.getIdToken();
-
-      const response = await fetch("http://localhost:3001/cart", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          book_id: book.id,
-          quantity: 1,
-          item_type: "book",
-        }),
-      });
-
-      if (response.ok) {
-        alert("Sikeresen kosárba helyezve!");
-      } else {
-        const errorText = await response.text();
-        alert("Hiba: " + errorText);
-      }
-    } catch (err) {
-      console.error("Hiba a kosárhoz adáskor:", err);
-      alert("Valami hiba történt!");
-    }
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (comment.trim() !== "") {
@@ -77,6 +35,16 @@ export default function BookDetails() {
       setRating(5);
     }
   };
+
+  const handleAddToCart = async () => {
+  try {
+    await addToCartBackend(book.id);
+    alert("Kosárba helyezve!");
+  } catch (err) {
+    console.error("Kosárba helyezési hiba:", err);
+    alert("Hiba: " + err.message);
+  }
+};
 
   const handleDelete = (index) => {
     const newComments = [...comments];

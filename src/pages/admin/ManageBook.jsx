@@ -1,25 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth } from "../firebase";
+import { auth } from "../../firebase";
 
-// Magyar kategóriák manuálisan megadva
+// Kategória opciók
 const CATEGORY_OPTIONS = [
-  "Szépirodalom",
-  "Ismeretterjesztő",
-  "Krimi",
-  "Romantikus",
-  "Sci-fi",
-  "Fantasy",
-  "Életrajz",
-  "Önfejlesztés",
-  "Történelem",
-  "Gyermekkönyv",
-  "Ifjúsági",
-  "Thriller",
-  "Üzleti",
-  "Egészség és életmód",
-  "Utazás",
+  "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
+  "Sci-fi", "Fantasy", "Életrajz", "Önfejlesztés", "Történelem",
+  "Gyermekkönyv", "Ifjúsági", "Thriller", "Üzleti",
+  "Egészség és életmód", "Utazás",
 ];
 
 export default function AdminPage() {
@@ -31,7 +20,14 @@ export default function AdminPage() {
   useEffect(() => {
     fetch("/api/books")
       .then((res) => res.json())
-      .then(setBooks)
+      .then((data) => {
+        if (!Array.isArray(data)) {
+          console.error("Hibás könyv lista formátum:", data);
+          setBooks([]);
+          return;
+        }
+        setBooks(data);
+      })
       .catch((err) => console.error("Könyvek betöltése hiba:", err));
   }, []);
 
@@ -83,8 +79,10 @@ export default function AdminPage() {
   };
 
   const handleAddBook = async () => {
-    const requiredFields = ["title", "author", "price", "stock", "categories"];
-    const missing = requiredFields.filter((f) => !newBook[f] || (Array.isArray(newBook[f]) && newBook[f].length === 0));
+    const required = ["title", "author", "price", "stock", "categories"];
+    const missing = required.filter(
+      (f) => !newBook[f] || (Array.isArray(newBook[f]) && newBook[f].length === 0)
+    );
     if (missing.length > 0) {
       alert(`Hiányzó mezők: ${missing.join(", ")}`);
       return;
@@ -92,7 +90,6 @@ export default function AdminPage() {
 
     try {
       const token = await auth.currentUser.getIdToken();
-
       const res = await fetch("/api/books", {
         method: "POST",
         headers: {
@@ -117,7 +114,6 @@ export default function AdminPage() {
   const handleUpdateBook = async () => {
     try {
       const token = await auth.currentUser.getIdToken();
-
       const res = await fetch(`/api/books/${editingBook.id}`, {
         method: "PATCH",
         headers: {
@@ -144,9 +140,7 @@ export default function AdminPage() {
       const token = await auth.currentUser.getIdToken();
       const res = await fetch(`/api/books/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error("Törlés sikertelen");
@@ -158,10 +152,12 @@ export default function AdminPage() {
     }
   };
 
-  const filteredBooks = books.filter((book) =>
-    (book.title || "").toLowerCase().includes(search.toLowerCase()) ||
-    (book.author || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredBooks = Array.isArray(books)
+    ? books.filter((book) =>
+        (book.title || "").toLowerCase().includes(search.toLowerCase()) ||
+        (book.author || "").toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="max-w-5xl mx-auto mt-10 px-6 py-8 bg-white rounded shadow border">
@@ -169,6 +165,7 @@ export default function AdminPage() {
         Admin felület – Könyvkezelés
       </h1>
 
+      {/* Új/Szerkesztés űrlap */}
       <div className="mb-10">
         <h2 className="text-xl font-semibold mb-4">
           {editingBook ? "Könyv szerkesztése" : "Új könyv hozzáadása"}
@@ -178,15 +175,13 @@ export default function AdminPage() {
             <input
               key={field}
               name={field}
-              placeholder={
-                {
-                  title: "Könyv címe",
-                  author: "Szerző neve",
-                  publisher: "Kiadó neve",
-                  language: "Nyelv",
-                  publication_date: "Megjelenés dátuma (ÉÉÉÉ-HH-NN)",
-                }[field]
-              }
+              placeholder={{
+                title: "Könyv címe",
+                author: "Szerző neve",
+                publisher: "Kiadó neve",
+                language: "Nyelv",
+                publication_date: "Megjelenés dátuma (ÉÉÉÉ-HH-NN)",
+              }[field]}
               value={(editingBook || newBook)[field] || ""}
               onChange={handleInputChange}
               className="border p-2 rounded"
@@ -220,7 +215,7 @@ export default function AdminPage() {
             name="categories"
             value={(editingBook || newBook).categories?.[0] || ""}
             onChange={(e) => {
-              const selected = [e.target.value]; // egyetlen kategória tömbbe téve
+              const selected = [e.target.value];
               if (editingBook) {
                 setEditingBook({ ...editingBook, categories: selected });
               } else {
@@ -229,14 +224,11 @@ export default function AdminPage() {
             }}
             className="border p-2 rounded col-span-2"
           >
-          <option value="">-- Válassz kategóriát --</option>
-          {CATEGORY_OPTIONS.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-
+            <option value="">-- Válassz kategóriát --</option>
+            {CATEGORY_OPTIONS.map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
 
           <input
             type="file"
@@ -247,42 +239,34 @@ export default function AdminPage() {
 
           {(editingBook?.cover_image_url || newBook?.cover_image_url) && (
             <img
-  src={
-    (editingBook?.cover_image_url || newBook?.cover_image_url)?.startsWith("http")
-      ? (editingBook?.cover_image_url || newBook?.cover_image_url)
-      : `http://localhost:3001${editingBook?.cover_image_url || newBook?.cover_image_url}`
-  }
-  alt="Borítókép"
-  className="w-32 h-auto"
-/>
+              src={
+                (editingBook?.cover_image_url || newBook?.cover_image_url)?.startsWith("http")
+                  ? (editingBook?.cover_image_url || newBook?.cover_image_url)
+                  : `http://localhost:3001${editingBook?.cover_image_url || newBook?.cover_image_url}`
+              }
+              alt="Borítókép"
+              className="w-32 h-auto"
+            />
           )}
         </div>
 
         {editingBook ? (
           <>
-            <button
-              onClick={handleUpdateBook}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-2"
-            >
+            <button onClick={handleUpdateBook} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-2">
               Mentés
             </button>
-            <button
-              onClick={() => setEditingBook(null)}
-              className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-            >
+            <button onClick={() => setEditingBook(null)} className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">
               Mégse
             </button>
           </>
         ) : (
-          <button
-            onClick={handleAddBook}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
+          <button onClick={handleAddBook} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
             Könyv hozzáadása
           </button>
         )}
       </div>
 
+      {/* Keresés */}
       <input
         type="text"
         placeholder="Keresés cím vagy szerző szerint..."
@@ -291,38 +275,26 @@ export default function AdminPage() {
         className="border px-3 py-2 rounded mb-6 w-full"
       />
 
+      {/* Könyv lista */}
       <div>
         <h2 className="text-xl font-semibold mb-4">Könyvek listája</h2>
         {filteredBooks.map((book) => (
-          <div
-            key={book.id}
-            className="border p-4 rounded mb-4 flex justify-between items-start"
-          >
+          <div key={book.id} className="border p-4 rounded mb-4 flex justify-between items-start">
             <div>
               <h3 className="text-lg font-bold">{book.title}</h3>
               <p className="text-sm text-gray-600">Szerző: {book.author}</p>
               <p className="text-sm">Ár: {book.price} Ft | Készlet: {book.stock}</p>
-              <p className="text-sm text-gray-500">
-                Kiadó: {book.publisher}, Nyelv: {book.language}
-              </p>
-              <p className="text-sm text-gray-600">
-                Kategóriák: {(book.categories || []).join(", ")}
-              </p>
+              <p className="text-sm text-gray-500">Kiadó: {book.publisher}, Nyelv: {book.language}</p>
+              <p className="text-sm text-gray-600">Kategóriák: {(book.categories || []).join(", ")}</p>
               {book.cover_image_url && (
-                <img src={book.cover_image_url} alt="Borító" className="w-24 mt-2" />
+                <img src={book.cover_image_url.startsWith("http") ? book.cover_image_url : `http://localhost:3001${book.cover_image_url}`} alt="Borító" className="w-24 mt-2" />
               )}
             </div>
             <div className="space-x-2">
-              <button
-                onClick={() => setEditingBook(book)}
-                className="border border-gray-300 px-3 py-1 rounded hover:bg-gray-100"
-              >
+              <button onClick={() => setEditingBook(book)} className="border border-gray-300 px-3 py-1 rounded hover:bg-gray-100">
                 Módosítás
               </button>
-              <button
-                onClick={() => handleDelete(book.id)}
-                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-              >
+              <button onClick={() => handleDelete(book.id)} className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
                 Törlés
               </button>
             </div>
