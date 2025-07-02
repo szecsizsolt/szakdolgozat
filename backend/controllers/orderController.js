@@ -1,109 +1,105 @@
-import { Pool } from 'pg';
+import pool from "../db.js";
+import { v4 as uuidv4 } from "uuid";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-export const createOrder = async (req, res) => {
-  const firebase_uid = req.user.uid;
-
+// 1. Rendelés leadása (felhasználói oldalról)
+export const placeOrder = async (req, res) => {
   try {
+    const firebase_uid = req.user.uid;
+
     const { rows: userRows } = await pool.query(
-      'SELECT id FROM users WHERE firebase_uid = $1', [firebase_uid]
+      'SELECT id FROM users WHERE firebase_uid = $1',
+      [firebase_uid]
     );
 
     if (userRows.length === 0) {
       return res.status(404).json({ error: 'Felhasználó nem található' });
     }
 
-    const user_id = userRows[0].id;
+    const userId = userRows[0].id;
 
-    const { rows: cartItems } = await pool.query(
-      'SELECT * FROM cart_items WHERE user_id = $1', [user_id]
+    // Kosár lekérdezése
+    const cartRes = await pool.query(
+      `SELECT * FROM cart_items WHERE user_id = $1`,
+      [userId]
     );
+
+    const cartItems = cartRes.rows;
 
     if (cartItems.length === 0) {
-      return res.status(400).json({ error: 'Kosár üres' });
+      return res.status(400).json({ error: "A kosár üres" });
     }
 
-    const { rows: orderRows } = await pool.query(
-      'INSERT INTO orders (user_id) VALUES ($1) RETURNING id',
-      [user_id]
+    // Összegzés
+    const totalAmount = cartItems.reduce(
+      (sum, item) => sum + item.quantity * item.price, // biztosítsd, hogy `price` szerepel a kosárban vagy csinálj JOIN-t
+      0
     );
 
-    const order_id = orderRows[0].id;
-    let totalAmount = 0;
+    const orderId = uuidv4();
 
-    const insertPromises = cartItems.map(item => {
-      totalAmount += item.price * item.quantity;
-      return pool.query(`
-        INSERT INTO order_items (order_id, book_id, quantity, price_each)
-        VALUES ($1, $2, $3, $4)
-      `, [order_id, item.book_id, item.quantity, item.price]);
-    });
-
-    await Promise.all(insertPromises);
-
+    // Rendelés létrehozása
     await pool.query(
-      'UPDATE orders SET total_amount = $1 WHERE id = $2',
-      [totalAmount, order_id]
+      `INSERT INTO orders (id, user_id, status, total_amount, created_at)
+       VALUES ($1, $2, 'pending', $3, NOW())`,
+      [orderId, userId, totalAmount]
     );
 
-    await pool.query('DELETE FROM cart_items WHERE user_id = $1', [user_id]);
+    // Rendelési tételek + vásárlási napló beszúrása
+    for (const item of cartItems) {
+      await pool.query(
+        `INSERT INTO order_items (id, order_id, book_id, quantity, price_each)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [uuidv4(), orderId, item.book_id, item.quantity, item.price]
+      );
 
-    res.json({ success: true, order_id });
+      await pool.query(
+        `INSERT INTO user_purchases (id, user_id, book_id, item_type, order_id, purchased_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [uuidv4(), userId, item.book_id, item.item_type, orderId]
+      );
+    }
+
+    // Kosár ürítése
+    await pool.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
+
+    res.status(200).json({ success: true, orderId });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Szerver hiba rendelés létrehozásakor' });
+    console.error("❌ Rendelés leadása sikertelen:", err);
+    res.status(500).json({ error: "Szerverhiba a rendelés során" });
   }
 };
 
-export const getOrders = async (req, res) => {
-  const firebase_uid = req.user.uid;
-
+// 2. Összes rendelés lekérése adminnak
+export const getAllOrders = async (req, res) => {
   try {
-    const { rows: userRows } = await pool.query(
-      'SELECT id FROM users WHERE firebase_uid = $1', [firebase_uid]
-    );
-
-    if (userRows.length === 0) {
-      return res.status(404).json({ error: 'Felhasználó nem található' });
-    }
-
-    const user_id = userRows[0].id;
-
-    const { rows: orders } = await pool.query(`
-      SELECT o.id AS order_id, o.status, o.total_amount, o.created_at,
-             oi.book_id, b.title, b.cover_image_url, oi.quantity, oi.price_each
+    const result = await pool.query(`
+      SELECT 
+        o.id AS id,
+        o.status,
+        o.total_amount,
+        o.created_at,
+        u.name AS user_name,
+        u.email AS user_email,
+        json_agg(
+          json_build_object(
+            'title', b.title,
+            'item_type', up.item_type,
+            'quantity', oi.quantity,
+            'price_each', oi.price_each
+          )
+        ) AS items
       FROM orders o
-      JOIN order_items oi ON o.id = oi.order_id
-      JOIN books b ON oi.book_id = b.id
-      WHERE o.user_id = $1
+      JOIN users u ON o.user_id = u.id
+      JOIN order_items oi ON oi.order_id = o.id
+      JOIN books b ON b.id = oi.book_id
+      LEFT JOIN user_purchases up ON up.order_id = o.id AND up.book_id = b.id
+      GROUP BY o.id, u.name, u.email
       ORDER BY o.created_at DESC
-    `, [user_id]);
+    `);
 
-    const grouped = {};
-    for (const row of orders) {
-      if (!grouped[row.order_id]) {
-        grouped[row.order_id] = {
-          order_id: row.order_id,
-          status: row.status,
-          total_amount: row.total_amount,
-          created_at: row.created_at,
-          items: []
-        };
-      }
-
-      grouped[row.order_id].items.push({
-        book_id: row.book_id,
-        title: row.title,
-        cover_image_url: row.cover_image_url,
-        quantity: row.quantity,
-        price_each: row.price_each
-      });
-    }
-
-    res.json(Object.values(grouped));
+    res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Szerver hiba rendelések lekérdezésekor' });
+    console.error("❌ Rendelések lekérdezése sikertelen:", err);
+    res.status(500).json({ error: "Szerverhiba a lekérdezés során" });
   }
 };

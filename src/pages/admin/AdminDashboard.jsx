@@ -37,6 +37,12 @@ export default function AdminDashboard() {
         >
           Blog kezelés
         </button>
+        <button
+          onClick={() => navigate("/admin/orders")}
+          className="bg-yellow-400 hover:bg-yellow-500 text-green-900 py-3 px-6 font-bold "
+        >
+          Rendelések
+        </button>
       </div>
     </div>
   );

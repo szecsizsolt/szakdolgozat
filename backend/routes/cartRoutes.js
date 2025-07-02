@@ -6,14 +6,18 @@ import {
   deleteCartItem,
   clearCart
 } from '../controllers/cartController.js';
+
 import { authenticate } from '../middleware/authMiddleware.js';
+import { ensureUserInDatabase } from '../middleware/ensureUserInDatabase.js';
 
 const router = express.Router();
 
-router.get('/', authenticate, getCart);
-router.post('/', authenticate, addToCart);
-router.patch('/:id', authenticate, updateCartItem);
-router.delete('/:id', authenticate, deleteCartItem);
-router.delete('/', authenticate, clearCart);
+router.use(authenticate, ensureUserInDatabase);
+
+router.get('/', getCart);
+router.post('/', addToCart);
+router.patch('/:id', updateCartItem);
+router.delete('/:id', deleteCartItem);
+router.delete('/', clearCart);
 
 export default router;

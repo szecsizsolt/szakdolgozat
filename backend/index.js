@@ -16,24 +16,22 @@ import orderRoutes from './routes/orderRoutes.js';
 import ebookRoutes from './routes/ebookRoutes.js';
 import audiobookRoutes from './routes/audiobookRoutes.js';
 
-// 🔽 __dirname kiszámítása ES Modules környezetben
+// ⬇️ __dirname kiszámítása ES Modules környezetben
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// 🔽 Firebase service account betöltése biztonságosan
+// ⬇️ Környezeti változók betöltése
+dotenv.config();
+
+// ⬇️ Firebase inicializálása
 const serviceAccount = JSON.parse(
   readFileSync(join(__dirname, 'firebase-service-account.json'), 'utf8')
 );
 
-// 🔽 Környezeti változók betöltése
-dotenv.config();
-
-// 🔽 Firebase inicializálása
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-// 🔽 Express alkalmazás létrehozása
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -56,17 +54,21 @@ app.post("/upload", upload.single("image"), (req, res) => {
 });
 app.use("/uploads", express.static(join(__dirname, 'uploads')));
 
-// 🔀 API útvonalak
+// 🔀 API route-ok
 app.use('/auth', authRoutes);
 app.use('/books', bookRoutes);
 app.use('/cart', cartRoutes);
-app.use('/orders', orderRoutes);
+app.use('/orders', orderRoutes); // ⬅️ Ez tartalmazza POST /orders és GET /admin/orders is!
 app.use('/ebooks', ebookRoutes);
 app.use('/audiobooks', audiobookRoutes);
 
 // 🌍 Teszt route
 app.get('/', (req, res) => {
-  res.send('Online Könyvesbolt API működik ✅');
+  res.send('📚 Online Könyvesbolt API működik ✅');
 });
 
-export default app;
+// ⬇️ Szerver indítása (ha ez a belépési pontod)
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`🚀 Szerver fut a ${PORT} porton`);
+});

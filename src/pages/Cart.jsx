@@ -68,9 +68,29 @@ export default function Cart() {
         Authorization: `Bearer ${token}`,
       },
     });
-
     fetchCart();
   };
+
+  const handleCheckout = async () => {
+    const user = auth.currentUser;
+    const token = await user.getIdToken();
+
+    const res = await fetch('http://localhost:3001/orders/orders', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.ok) {
+      alert("✅ Rendelés sikeresen leadva!");
+      fetchCart(); // újratölti a kosarat
+    } else {
+      const err = await res.json();
+      alert("❌ Hiba a rendelés során: " + err.error);
+    }
+  };
+
 
   const total = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -116,7 +136,7 @@ export default function Cart() {
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => updateQuantity(item.id, -1)}
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className="px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded text-sm font-bold"
                       >
                         <FaMinus size={10} />
@@ -125,7 +145,7 @@ export default function Cart() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.id, 1)}
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         className="px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded text-sm font-bold"
                       >
                         <FaPlus size={10} />
@@ -161,7 +181,10 @@ export default function Cart() {
               >
                 Kosár törlése
               </button>
-              <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-semibold">
+              <button
+                onClick={handleCheckout}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-semibold"
+              >
                 Fizetés
               </button>
             </div>

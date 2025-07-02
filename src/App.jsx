@@ -21,6 +21,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageBook from "./pages/admin/ManageBook";
 import ManageEBook from "./pages/admin/ManageEBook";
 import ManageAudioBook from "./pages/admin/ManageAudioBook";
+import Orders from "./pages/admin/Orders";
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
             <Route path="/admin/add-book" element={<AdminRoute><ManageBook /></AdminRoute>} />
             <Route path="/admin/ebook" element={<AdminRoute><ManageEBook /></AdminRoute>} />
             <Route path="/admin/audio" element={<AdminRoute><ManageAudioBook /></AdminRoute>} />
+            <Route path="/admin/orders" element={<AdminRoute><Orders /></AdminRoute>} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/book/:id" element={<BookDetails />} />
           </Routes>
