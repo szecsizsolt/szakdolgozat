@@ -36,15 +36,17 @@ export default function BookDetails() {
     }
   };
 
-  const handleAddToCart = async () => {
+const handleAddToCart = async () => {
   try {
-    await addToCartBackend(book.id);
+    const bookId = book.book_id || book.id;
+    await addToCartBackend(bookId, 1, book.type);
     alert("Kosárba helyezve!");
   } catch (err) {
     console.error("Kosárba helyezési hiba:", err);
     alert("Hiba: " + err.message);
   }
 };
+
 
   const handleDelete = (index) => {
     const newComments = [...comments];

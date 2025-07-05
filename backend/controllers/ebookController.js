@@ -3,10 +3,13 @@ import pool from '../db.js';
 export const getEbooks = async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT ebooks.*, 
-             books.title, books.author, books.price, books.cover_image_url, 
-             books.publisher, books.language, books.publication_date, 
-             books.description, books.categories
+      SELECT 
+        books.id AS book_id,
+        ebooks.id AS id,
+        books.author, books.price, books.cover_image_url, 
+        books.publisher, books.language, books.publication_date, 
+        books.description, books.categories, books.type,
+        ebooks.file_url, ebooks.file_format, ebooks.file_size_mb
       FROM ebooks
       JOIN books ON ebooks.book_id = books.id
     `);
@@ -16,6 +19,7 @@ export const getEbooks = async (req, res) => {
     res.status(500).json({ error: 'Szerver hiba az e-könyvek lekérdezésekor.' });
   }
 };
+
 
 export const createEbook = async (req, res) => {
   const {
@@ -29,11 +33,14 @@ export const createEbook = async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // könyv beszúrása
+    // Könyv beszúrása 'ebook' típusúként
     const bookInsert = await client.query(`
-      INSERT INTO books (id, title, author, description, publisher,
-        language, publication_date, price, stock, cover_image_url, categories)
-      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, 0, $8, $9)
+      INSERT INTO books (
+        id, title, author, description, publisher,
+        language, publication_date, price, stock,
+        cover_image_url, categories, type
+      )
+      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, 0, $8, $9, 'ebook')
       RETURNING id
     `, [
       title, author, description, publisher,
@@ -43,7 +50,7 @@ export const createEbook = async (req, res) => {
 
     const bookId = bookInsert.rows[0].id;
 
-    // ebook beszúrása
+    // E-könyv beszúrása
     const ebookInsert = await client.query(`
       INSERT INTO ebooks (id, book_id, file_url, file_format, file_size_mb)
       VALUES (uuid_generate_v4(), $1, $2, $3, $4)
@@ -52,7 +59,7 @@ export const createEbook = async (req, res) => {
 
     const ebookId = ebookInsert.rows[0].id;
 
-    // összesített lekérdezés
+    // Összesített lekérdezés visszaküldéshez
     const { rows } = await client.query(`
       SELECT ebooks.*, 
              books.title, books.author, books.price, books.cover_image_url, 
@@ -73,6 +80,7 @@ export const createEbook = async (req, res) => {
     client.release();
   }
 };
+
 
 export const deleteEbook = async (req, res) => {
   const ebookId = req.params.id;

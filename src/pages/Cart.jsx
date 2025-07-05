@@ -116,7 +116,7 @@ export default function Cart() {
           <div className="space-y-6">
             {cartItems.map((item) => (
               <div
-                key={item.id}
+                key={`${item.book_id}-${item.item_type}`}
                 className="flex items-center justify-between bg-[#fefae0] hover:shadow-2xl transition-shadow p-5 rounded-2xl shadow-xl border border-yellow-300"
               >
                 <div className="flex items-center gap-4">
@@ -126,13 +126,18 @@ export default function Cart() {
                     className="w-20 h-28 object-cover rounded-md border bg-white"
                   />
                   <div>
-                    <Link to={`/book/${item.id}`}>
+                    <Link to={`/book/${item.book_id}`}>
                       <h2 className="text-lg font-bold text-green-900 hover:underline">
                         {item.title}
                       </h2>
                     </Link>
                     <p className="text-sm text-gray-600">
                       Szerző: {item.author}
+                    </p>
+                    <p className="text-sm text-gray-500 italic">
+                      {item.item_type === 'ebook' && '📱 E-könyv'}
+                      {item.item_type === 'audiobook' && '🎧 Hangoskönyv'}
+                      {item.item_type === 'physical' && '📕 Hagyományos könyv'}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <button

@@ -17,9 +17,12 @@ export const placeOrder = async (req, res) => {
 
     const userId = userRows[0].id;
 
-    // Kosár lekérdezése
+    // Kosár lekérdezése (csatlakoztatjuk a books táblát a típus miatt)
     const cartRes = await pool.query(
-      `SELECT * FROM cart_items WHERE user_id = $1`,
+      `SELECT ci.*, b.type as item_type, b.price
+       FROM cart_items ci
+       JOIN books b ON ci.book_id = b.id
+       WHERE ci.user_id = $1`,
       [userId]
     );
 
@@ -31,20 +34,26 @@ export const placeOrder = async (req, res) => {
 
     // Összegzés
     const totalAmount = cartItems.reduce(
-      (sum, item) => sum + item.quantity * item.price, // biztosítsd, hogy `price` szerepel a kosárban vagy csinálj JOIN-t
+      (sum, item) => sum + item.quantity * item.price,
       0
     );
 
     const orderId = uuidv4();
 
+    // ➕ Meghatározzuk a státuszt (ha csak e/a könyv van → done)
+    const allDigital = cartItems.every(item =>
+      item.item_type === 'ebook' || item.item_type === 'audiobook'
+    );
+    const initialStatus = allDigital ? 'done' : 'pending';
+
     // Rendelés létrehozása
     await pool.query(
       `INSERT INTO orders (id, user_id, status, total_amount, created_at)
-       VALUES ($1, $2, 'pending', $3, NOW())`,
-      [orderId, userId, totalAmount]
+       VALUES ($1, $2, $3, $4, NOW())`,
+      [orderId, userId, initialStatus, totalAmount]
     );
 
-    // Rendelési tételek + vásárlási napló beszúrása
+    // Rendelési tételek + vásárlási napló
     for (const item of cartItems) {
       await pool.query(
         `INSERT INTO order_items (id, order_id, book_id, quantity, price_each)
@@ -68,6 +77,7 @@ export const placeOrder = async (req, res) => {
     res.status(500).json({ error: "Szerverhiba a rendelés során" });
   }
 };
+
 
 // 2. Összes rendelés lekérése adminnak
 export const getAllOrders = async (req, res) => {

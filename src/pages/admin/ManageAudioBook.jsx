@@ -99,18 +99,19 @@ export default function AudiobookAdminPage() {
   };
 
   const handleDelete = async (id) => {
-    const token = await auth.currentUser.getIdToken();
-    try {
-      const res = await fetch(`/api/audiobooks/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Törlés sikertelen");
-      setAudiobooks(audiobooks.filter((b) => b.id !== id));
-    } catch (err) {
-      console.error("Törlés hiba:", err);
-    }
-  };
+  const token = await auth.currentUser.getIdToken();
+  try {
+    const res = await fetch(`/api/audiobooks/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Törlés sikertelen");
+    setAudiobooks(audiobooks.filter((b) => b.id !== id));
+  } catch (err) {
+    console.error("Törlés hiba:", err);
+  }
+};
+
 
   const filtered = audiobooks.filter((e) =>
     e.title?.toLowerCase().includes(search.toLowerCase()) ||

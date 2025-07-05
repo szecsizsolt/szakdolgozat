@@ -25,17 +25,36 @@ export const getBookById = async (req, res) => {
 };
 
 export const createBook = async (req, res) => {
-  const { title, author, description, publisher, language, publication_date, price, stock, cover_image_url, categories } = req.body;
+  const {
+    title,
+    author,
+    description,
+    publisher,
+    language,
+    publication_date,
+    price,
+    stock,
+    cover_image_url,
+    categories
+  } = req.body;
+
+  const type = 'physical';
+
   try {
     const result = await pool.query(`
       INSERT INTO books (
         id, title, author, description, publisher,
         language, publication_date, price,
-        stock, cover_image_url, categories
+        stock, cover_image_url, categories, type
       )
-      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *`,
-      [title, author, description, publisher, language, publication_date, price, stock, cover_image_url, categories]);
+      [
+        title, author, description, publisher,
+        language, publication_date, price,
+        stock, cover_image_url, categories, type
+      ]
+    );
 
     res.status(201).json(result.rows[0]);
   } catch (err) {

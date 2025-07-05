@@ -12,12 +12,13 @@ export const getCart = async (req, res) => {
     const user_id = userRows[0].id;
 
     const result = await pool.query(`
-      SELECT ci.id, ci.quantity, ci.item_type, ci.added_at,
-             b.title, b.price, b.cover_image_url
+      SELECT ci.id, ci.book_id, ci.quantity, ci.item_type, ci.added_at,
+            b.title, b.price, b.cover_image_url, b.author, b.type
       FROM cart_items ci
       JOIN books b ON ci.book_id = b.id
       WHERE ci.user_id = $1
     `, [user_id]);
+
 
     res.json(result.rows);
   } catch (err) {
@@ -42,7 +43,7 @@ export const addToCart = async (req, res) => {
     await pool.query(`
       INSERT INTO cart_items (user_id, book_id, item_type, quantity, added_at)
       VALUES ($1, $2, $3, $4, NOW())
-      ON CONFLICT (user_id, book_id)
+      ON CONFLICT (user_id, book_id, item_type)
       DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity
     `, [user_id, book_id, item_type, quantity]);
 

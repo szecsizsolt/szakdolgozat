@@ -1,0 +1,59 @@
+import { useEffect, useState } from "react";
+import { getAuth } from "firebase/auth";
+import BookCard from "../components/BookCard";
+
+export default function MyDigitalBooks() {
+  const [purchases, setPurchases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const auth = getAuth();
+
+  useEffect(() => {
+    const fetchPurchases = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const token = await user.getIdToken();
+
+        const res = await fetch("http://localhost:3001/user/purchases", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        setPurchases(data.filter(item =>
+          item.item_type === "ebook" || item.item_type === "audiobook"
+        ));
+      } catch (err) {
+        console.error("Hiba a vásárlások lekérdezésekor:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPurchases();
+  }, []);
+
+  if (loading) {
+    return <p className="text-center py-10 text-gray-500">Betöltés...</p>;
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-10">
+      <h1 className="text-3xl font-bold mb-6 text-green-900">
+        🎧 Megvásárolt digitális könyveim
+      </h1>
+
+      {purchases.length === 0 ? (
+        <p className="text-gray-600">Még nem vásároltál e-könyvet vagy hangoskönyvet.</p>
+      ) : (
+        <div className="grid md:grid-cols-3 gap-6">
+          {purchases.map((book) => (
+            <BookCard key={book.book_id} book={book} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -88,18 +88,18 @@ export default function EbookAdminPage() {
   };
 
   const handleDelete = async (id) => {
-    const token = await auth.currentUser.getIdToken();
-    try {
-      const res = await fetch(`/api/ebooks/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Törlés sikertelen");
-      setEbooks(ebooks.filter((b) => b.id !== id));
-    } catch (err) {
-      console.error("Törlés hiba:", err);
-    }
-  };
+  const token = await auth.currentUser.getIdToken();
+  try {
+    const res = await fetch(`/api/ebooks/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Törlés sikertelen");
+    setEbooks(ebooks.filter((b) => b.id !== id));
+  } catch (err) {
+    console.error("Törlés hiba:", err);
+  }
+};
 
   const filtered = ebooks.filter((e) =>
     e.title?.toLowerCase().includes(search.toLowerCase()) ||

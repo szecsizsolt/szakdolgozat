@@ -12,13 +12,14 @@ export const createAudiobook = async (req, res) => {
   try {
     await client.query("BEGIN");
 
+    // 👉 'audiobook' típus beállítása
     const bookInsert = await client.query(`
       INSERT INTO books (
         id, title, author, description, publisher,
         language, publication_date, price,
-        stock, cover_image_url, categories
+        stock, cover_image_url, categories, type
       )
-      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, 0, $8, $9)
+      VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7, 0, $8, $9, 'audiobook')
       RETURNING id
     `, [
       title, author, description, publisher,
@@ -38,7 +39,8 @@ export const createAudiobook = async (req, res) => {
       SELECT audiobooks.*, 
              books.title, books.author, books.price, books.cover_image_url, 
              books.publisher, books.language, books.publication_date, 
-             books.description, books.categories
+             books.description, books.categories,
+             books.type
       FROM audiobooks
       JOIN books ON audiobooks.book_id = books.id
       WHERE audiobooks.id = $1
@@ -54,6 +56,7 @@ export const createAudiobook = async (req, res) => {
     client.release();
   }
 };
+
 
 export const updateAudiobook = async (req, res) => {
   const audiobookId = req.params.id;
@@ -100,7 +103,8 @@ export const updateAudiobook = async (req, res) => {
       SELECT audiobooks.*, 
              books.title, books.author, books.price, books.cover_image_url, 
              books.publisher, books.language, books.publication_date, 
-             books.description, books.categories
+             books.description, books.categories,
+             books.type
       FROM audiobooks
       JOIN books ON audiobooks.book_id = books.id
       WHERE audiobooks.id = $1
@@ -124,7 +128,8 @@ export const getAudiobookById = async (req, res) => {
       SELECT audiobooks.*, 
              books.title, books.author, books.price, books.cover_image_url, 
              books.publisher, books.language, books.publication_date, 
-             books.description, books.categories
+             books.description, books.categories,
+             books.type
       FROM audiobooks
       JOIN books ON audiobooks.book_id = books.id
       WHERE audiobooks.id = $1
@@ -140,6 +145,7 @@ export const getAudiobookById = async (req, res) => {
     res.status(500).json({ error: "Szerver hiba hangoskönyv lekérdezésekor." });
   }
 };
+
 
 export const deleteAudiobook = async (req, res) => {
   const audiobookId = req.params.id;
@@ -174,10 +180,13 @@ export const deleteAudiobook = async (req, res) => {
 export const getAllAudiobooks = async (req, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT audiobooks.*, 
-             books.title, books.author, books.price, books.cover_image_url, 
-             books.publisher, books.language, books.publication_date, 
-             books.description, books.categories
+      SELECT 
+        books.id AS book_id,
+        audiobooks.id AS id,
+        books.title, books.author, books.price, books.cover_image_url, 
+        books.publisher, books.language, books.publication_date, 
+        books.description, books.categories, books.type,
+        audiobooks.audio_url, audiobooks.duration_min
       FROM audiobooks
       JOIN books ON audiobooks.book_id = books.id
     `);

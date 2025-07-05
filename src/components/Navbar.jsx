@@ -65,7 +65,7 @@ export default function Navbar() {
           <Link to="/books" className="hover:underline">Könyvek</Link>
           <Link to="/ebooks" className="hover:underline">E-könyvek</Link>
           <Link to="/audio" className="hover:underline">Hangoskönyvek</Link>
-          <Link to="/sales" className="hover:underline">Akciók</Link>
+          <Link to="/my-digital-books" className="hover:underline">Digitális könyveim</Link>
           <Link to="/blog" className="hover:underline">Blog</Link>
           {userData?.role === "admin" && (
             <Link to="/admin" className="ml-4 text-green-900 font-bold hover:underline">

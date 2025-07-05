@@ -22,6 +22,10 @@ import ManageBook from "./pages/admin/ManageBook";
 import ManageEBook from "./pages/admin/ManageEBook";
 import ManageAudioBook from "./pages/admin/ManageAudioBook";
 import Orders from "./pages/admin/Orders";
+import EbookList from "./pages/EbookList";
+import AudiobookList from "./pages/AudioBookList";
+import MyDigitalBooks from "./pages/MyDigitalBooks";
+
 
 
 function App() {
@@ -36,8 +40,6 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/audio" element={<Audio />} />
-            <Route path="/ebooks" element={<Ebook />} />
             <Route path="/kapcsolat" element={<Kapcsolat />} />
             <Route path="/gyik" element={<GYIK />} />
             <Route path="/adatvedelem" element={<Adatvedelem />} />
@@ -51,6 +53,12 @@ function App() {
             <Route path="/admin/orders" element={<AdminRoute><Orders /></AdminRoute>} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/book/:id" element={<BookDetails />} />
+            <Route path="/books" element={<BookList />} />
+            <Route path="/ebooks" element={<EbookList />} />
+            <Route path="/audio" element={<AudiobookList />} />
+            <Route path="/my-digital-books" element={<MyDigitalBooks />} />
+
+
           </Routes>
         </div>
         <Footer />

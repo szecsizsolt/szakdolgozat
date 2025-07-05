@@ -15,6 +15,7 @@ import cartRoutes from './routes/cartRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import ebookRoutes from './routes/ebookRoutes.js';
 import audiobookRoutes from './routes/audiobookRoutes.js';
+import userRoutes from "./routes/userRoutes.js";
 
 // ⬇️ __dirname kiszámítása ES Modules környezetben
 const __filename = fileURLToPath(import.meta.url);
@@ -61,6 +62,7 @@ app.use('/cart', cartRoutes);
 app.use('/orders', orderRoutes); // ⬅️ Ez tartalmazza POST /orders és GET /admin/orders is!
 app.use('/ebooks', ebookRoutes);
 app.use('/audiobooks', audiobookRoutes);
+app.use("/user", userRoutes);
 
 // 🌍 Teszt route
 app.get('/', (req, res) => {
