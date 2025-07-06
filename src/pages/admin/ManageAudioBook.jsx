@@ -112,6 +112,40 @@ export default function AudiobookAdminPage() {
   }
 };
 
+const handleAudioUpload = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("audio", file);
+
+  try {
+    const res = await fetch("http://localhost:3001/api/upload/audio", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error("Feltöltési hiba");
+
+    const data = await res.json();
+
+    const update = {
+      audio_url: data.audio_url, // helyes kulcs
+      duration_min: data.duration_min, // ideiglenes vagy becsült hossz
+    };
+
+    editingAudiobook
+      ? setEditingAudiobook({ ...editingAudiobook, ...update })
+      : setNewAudiobook({ ...newAudiobook, ...update });
+
+    alert("Fájl feltöltve: " + file.name);
+  } catch (err) {
+    console.error(err);
+    alert("Nem sikerült feltölteni a hangfájlt.");
+  }
+};
+
+
 
   const filtered = audiobooks.filter((e) =>
     e.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -134,8 +168,6 @@ export default function AudiobookAdminPage() {
             ["language", "Nyelv"],
             ["publication_date", "Megjelenés (ÉÉÉÉ-HH-NN)"],
             ["price", "Ár (Ft)"],
-            ["audio_url", "Hang URL"],
-            ["duration_minutes", "Hossz (perc)"],
             ["narrator", "Narrátor"],
           ].map(([field, label]) => (
             <input
@@ -168,6 +200,12 @@ export default function AudiobookAdminPage() {
           {active.cover_image_url && (
             <img src={`http://localhost:3001${active.cover_image_url}`} alt="Borító" className="w-32 h-auto" />
           )}
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={handleAudioUpload}
+            className="border p-2 rounded col-span-2"
+          />
         </div>
         <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
           {editingAudiobook ? "Mentés" : "Hangoskönyv hozzáadása"}

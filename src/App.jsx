@@ -57,6 +57,8 @@ function App() {
             <Route path="/ebooks" element={<EbookList />} />
             <Route path="/audio" element={<AudiobookList />} />
             <Route path="/my-digital-books" element={<MyDigitalBooks />} />
+            <Route path="/ebook/:id" element={<Ebook />} />
+            <Route path="/audiobook/:id" element={<Audio />} />
 
 
           </Routes>

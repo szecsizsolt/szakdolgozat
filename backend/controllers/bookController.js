@@ -2,7 +2,7 @@ import pool from '../db.js';
 
 export const getAllBooks = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM books WHERE stock > 0');
+    const result = await pool.query('SELECT * FROM books');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -12,17 +12,30 @@ export const getAllBooks = async (req, res) => {
 
 export const getBookById = async (req, res) => {
   const bookId = req.params.id;
-  try {
-    const { rows } = await pool.query('SELECT * FROM books WHERE id = $1', [bookId]);
-    if (rows.length === 0)
-      return res.status(404).json({ error: 'Könyv nem található.' });
 
-    res.json(rows[0]);
+  try {
+    const result = await pool.query(`
+      SELECT 
+        books.*, 
+        ebooks.file_url,
+        ebooks.file_format,
+        ebooks.file_size_mb
+      FROM books
+      LEFT JOIN ebooks ON ebooks.book_id = books.id
+      WHERE books.id = $1
+    `, [bookId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Könyv nem található" });
+    }
+
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Szerver hiba a könyv lekérdezésekor.' });
+    console.error("Hiba a könyv lekérdezésekor:", err);
+    res.status(500).json({ error: "Szerver hiba" });
   }
 };
+
 
 export const createBook = async (req, res) => {
   const {

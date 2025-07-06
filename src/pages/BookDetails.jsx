@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { FaShoppingCart, FaStar, FaTrash } from "react-icons/fa";
 import { getAuth } from "firebase/auth";
 import { addToCartBackend } from "../utils/cart";
+import { useNavigate } from "react-router-dom";
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -13,6 +14,18 @@ export default function BookDetails() {
     { rating: 5, text: "Nagyon jó könyv.", date: new Date() },
     { rating: 1, text: "Nekem nem tetszett.", date: new Date() },
   ]);
+  const [hasAccess, setHasAccess] = useState(false);
+  const navigate = useNavigate();
+
+  const handleRead = () => {
+    if (book.type === "ebook") {
+      navigate(`/ebook/${book.id}`);
+    } else if (book.type === "audiobook") {
+      navigate(`/audiobook/${book.id}`);
+    }
+  };
+
+  const auth = getAuth();
 
   useEffect(() => {
     fetch(`http://localhost:3001/books/${id}`)
@@ -24,34 +37,53 @@ export default function BookDetails() {
       });
   }, [id]);
 
+  // Vásárlás ellenőrzése
+  useEffect(() => {
+    const checkPurchase = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const token = await user.getIdToken();
+
+        const res = await fetch("http://localhost:3001/user/purchases", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        const hasPurchased = data.some(
+          (item) => item.book_id === id && (item.item_type === "ebook" || item.item_type === "audiobook")
+        );
+
+        setHasAccess(hasPurchased);
+      } catch (err) {
+        console.error("Vásárlás ellenőrzési hiba:", err);
+      }
+    };
+
+    checkPurchase();
+  }, [id, auth]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (comment.trim() !== "") {
-      setComments([
-        ...comments,
-        { rating, text: comment, date: new Date() },
-      ]);
+      setComments([...comments, { rating, text: comment, date: new Date() }]);
       setComment("");
       setRating(5);
     }
   };
 
-const handleAddToCart = async () => {
-  try {
-    const bookId = book.book_id || book.id;
-    await addToCartBackend(bookId, 1, book.type);
-    alert("Kosárba helyezve!");
-  } catch (err) {
-    console.error("Kosárba helyezési hiba:", err);
-    alert("Hiba: " + err.message);
-  }
-};
-
-
-  const handleDelete = (index) => {
-    const newComments = [...comments];
-    newComments.splice(index, 1);
-    setComments(newComments);
+  const handleAddToCart = async () => {
+    try {
+      await addToCartBackend(book.id, 1, book.type);
+      alert("Kosárba helyezve!");
+    } catch (err) {
+      console.error("Kosárba helyezési hiba:", err);
+      alert("Hiba: " + err.message);
+    }
   };
 
   const formatDate = (date) => {
@@ -68,7 +100,6 @@ const handleAddToCart = async () => {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-10 space-y-10">
-      {/* Könyv rész */}
       <div className="flex flex-col md:flex-row gap-10 items-start">
         <img
           src={book.cover_image_url || "/placeholder.png"}
@@ -79,6 +110,7 @@ const handleAddToCart = async () => {
         <div className="flex-1 space-y-4 relative w-full">
           <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
             <p className="text-2xl font-bold text-gray-800">{book.price} Ft</p>
+
             <button
               onClick={handleAddToCart}
               className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-5 py-2 rounded shadow"
@@ -86,6 +118,21 @@ const handleAddToCart = async () => {
               <FaShoppingCart />
               Kosárba
             </button>
+
+            {/* OLVASÁS gomb feltételesen */}
+            {(book.type === "ebook" || book.type === "audiobook") && (
+              <button
+                onClick={handleRead}
+                disabled={!hasAccess}
+                className={`flex items-center gap-2 px-5 py-2 rounded shadow font-bold ${
+                  hasAccess
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                📖 Olvasás
+              </button>
+            )}
           </div>
 
           <h1 className="text-3xl font-bold text-green-900 pr-40">{book.title}</h1>
@@ -95,7 +142,9 @@ const handleAddToCart = async () => {
           <p className="text-gray-600">
             Kiadó: <span className="font-medium">{book.publisher || "Ismeretlen"}</span>
           </p>
-
+          <p className="text-gray-600">
+            Típus: <span className="font-medium">{book.type || "Ismeretlen"}</span>
+          </p>
           <div className="flex items-center gap-1 text-yellow-500 text-xl">
             {[...Array(book.rating || 4)].map((_, i) => (
               <FaStar key={i} />

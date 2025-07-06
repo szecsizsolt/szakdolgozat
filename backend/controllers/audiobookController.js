@@ -5,14 +5,14 @@ export const createAudiobook = async (req, res) => {
     title, author, description, publisher,
     language, publication_date, price,
     cover_image_url, categories,
-    audio_url, duration_min
+    audio_url, duration_min, narrator
   } = req.body;
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // 👉 'audiobook' típus beállítása
+    // Könyv beszúrása a books táblába, típus = 'audiobook'
     const bookInsert = await client.query(`
       INSERT INTO books (
         id, title, author, description, publisher,
@@ -29,12 +29,14 @@ export const createAudiobook = async (req, res) => {
 
     const bookId = bookInsert.rows[0].id;
 
+    // Hangoskönyv adatainak beszúrása
     const audiobookInsert = await client.query(`
-      INSERT INTO audiobooks (id, book_id, audio_url, duration_min)
-      VALUES (uuid_generate_v4(), $1, $2, $3)
+      INSERT INTO audiobooks (id, book_id, audio_url, duration_min, narrator)
+      VALUES (uuid_generate_v4(), $1, $2, $3::int, $4)
       RETURNING id
-    `, [bookId, audio_url, duration_min]);
+    `, [bookId, audio_url, Math.round(parseFloat(duration_min)), narrator]);
 
+    // Teljes visszatérési adat a frontendnek
     const { rows: fullRows } = await client.query(`
       SELECT audiobooks.*, 
              books.title, books.author, books.price, books.cover_image_url, 
@@ -48,14 +50,16 @@ export const createAudiobook = async (req, res) => {
 
     await client.query("COMMIT");
     res.status(201).json(fullRows[0]);
+
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
+    console.error("❌ createAudiobook hiba:", err);
     res.status(500).json({ error: "Szerver hiba hangoskönyv létrehozásakor." });
   } finally {
     client.release();
   }
 };
+
 
 
 export const updateAudiobook = async (req, res) => {
@@ -132,7 +136,7 @@ export const getAudiobookById = async (req, res) => {
              books.type
       FROM audiobooks
       JOIN books ON audiobooks.book_id = books.id
-      WHERE audiobooks.id = $1
+      WHERE audiobooks.id = $1 OR books.id = $1
     `, [id]);
 
     if (result.rows.length === 0) {
@@ -145,7 +149,6 @@ export const getAudiobookById = async (req, res) => {
     res.status(500).json({ error: "Szerver hiba hangoskönyv lekérdezésekor." });
   }
 };
-
 
 export const deleteAudiobook = async (req, res) => {
   const audiobookId = req.params.id;

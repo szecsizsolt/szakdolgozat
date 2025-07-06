@@ -3,19 +3,18 @@ import { FaShoppingCart } from "react-icons/fa";
 import { addToCartBackend } from "../utils/cart";
 
 export default function BookCard({ book }) {
-const handleAddToCart = async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+  const handleAddToCart = async (e) => {
+    e.preventDefault(); // ne navigáljon el a kattintásra
+    e.stopPropagation();
 
-  try {
-    const bookId = book.book_id || book.id;
-    await addToCartBackend(bookId, 1, book.type);
-    alert("Kosárba helyezve!");
-  } catch (err) {
-    alert("Hiba: " + err.message);
-  }
-};
-
+    try {
+      await addToCartBackend(book.id, 1, book.type); // mindig books.id
+      alert("Kosárba helyezve!");
+    } catch (err) {
+      console.error("Kosárba helyezési hiba:", err);
+      alert("Hiba: " + err.message);
+    }
+  };
 
   const renderType = () => {
     switch (book.type) {
@@ -29,17 +28,19 @@ const handleAddToCart = async (e) => {
   };
 
   return (
-    <Link to={`/book/${book.id}`} className="transform hover:scale-105 transition duration-300">
+    <Link
+      to={`/book/${book.id}`} // Helyesen a books tábla ID-je
+      className="transform hover:scale-105 transition duration-300 block"
+    >
       <div className="bg-[#fefae0] p-5 rounded-2xl shadow-xl hover:shadow-2xl text-center h-full border border-yellow-300">
-        {book.cover_image_url && (
-          <img
-            src={book.cover_image_url}
-            alt={book.title}
-            className="w-full h-[220px] object-contain rounded-md mb-3"
-          />
-        )}
+        <img
+          src={book.cover_image_url || "/placeholder.png"}
+          alt={book.title}
+          className="w-full h-[220px] object-contain rounded-md mb-3"
+        />
+
         <h4 className="text-lg font-bold text-green-900">{book.title}</h4>
-        <p className="text-sm text-gray-600">Szerző: {book.author}</p>
+        <p className="text-sm text-gray-600">Szerző: {book.author || "Ismeretlen"}</p>
 
         {renderType()}
 
