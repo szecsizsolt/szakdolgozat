@@ -36,7 +36,7 @@ const NewsletterSignup = () => {
           </button>
         </form>
       ) : (
-        <p className="text-green-700 font-semibold">Köszönjük! Sikeresen feliratkoztál. ✅</p>
+        <p className="text-green-700 font-semibold">Köszönjük! Sikeresen feliratkoztál. </p>
       )}
     </section>
   );

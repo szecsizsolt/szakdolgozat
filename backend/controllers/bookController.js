@@ -2,7 +2,7 @@ import pool from '../db.js';
 
 export const getAllBooks = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM books');
+    const result = await pool.query(`SELECT * FROM books WHERE type = 'physical'`);
     res.json(result.rows);
   } catch (err) {
     console.error(err);

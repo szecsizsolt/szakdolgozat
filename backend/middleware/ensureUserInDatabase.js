@@ -17,12 +17,12 @@ export async function ensureUserInDatabase(req, res, next) {
          VALUES ($1, $2, $3, $4)`,
         [uuidv4(), name, email, uid]
       );
-      console.log(`🆕 Új felhasználó beszúrva az adatbázisba: ${email}`);
+      console.log(`Új felhasználó beszúrva az adatbázisba: ${email}`);
     }
 
     next();
   } catch (err) {
-    console.error("❌ Hiba a felhasználó ellenőrzésekor/beszúrásakor:", err);
+    console.error("Hiba a felhasználó ellenőrzésekor/beszúrásakor:", err);
     res.status(500).json({ error: "Felhasználó ellenőrzési hiba" });
   }
 }

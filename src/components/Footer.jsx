@@ -5,7 +5,7 @@ const Footer = () => {
     <footer className="bg-[#f8f4db] shadow-md py-6">
       <div className="max-w-[1280px] mx-auto px-4 flex justify-between items-center relative">
         
-        {/* 📚 KönyvBolt bemutatkozás */}
+        {/*KönyvBolt bemutatkozás */}
         <div className="max-w-xs">
           <h3 className="text-lg font-bold mb-2">📚 KönyvBolt</h3>
           <p>
@@ -13,7 +13,7 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* 🔗 Hasznos linkek */}
+        {/* Hasznos linkek */}
         <div>
             <h3 className="text-lg font-bold mb-2">🔗 Hasznos linkek</h3>
             <ul className="space-y-1">
@@ -24,7 +24,7 @@ const Footer = () => {
              </ul>
         </div>
 
-        {/* 📞 Elérhetőségek */}
+        {/*Elérhetőségek */}
         <div>
           <h3 className="text-lg font-bold mb-2">📞 Elérhetőségek</h3>
           <ul className="space-y-1">

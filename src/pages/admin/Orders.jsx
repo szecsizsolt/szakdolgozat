@@ -27,12 +27,12 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">🔄 Betöltés...</p>;
+  if (loading) return <p className="text-center mt-10">Betöltés...</p>;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
       <h1 className="text-3xl font-bold text-green-900 mb-6">
-        📦 Rendelések listája
+         Rendelések listája
       </h1>
 
       {orders.length === 0 ? (
@@ -56,7 +56,7 @@ export default function Orders() {
             </div>
 
             <div className="border-t pt-4">
-              <h2 className="font-semibold mb-2 text-gray-800">📚 Tételek:</h2>
+              <h2 className="font-semibold mb-2 text-gray-800">Tételek:</h2>
               <ul className="space-y-2">
                 {order.items.map((item, index) => (
                   <li key={index} className="text-sm text-gray-700">

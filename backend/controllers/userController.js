@@ -25,7 +25,7 @@ export const getUserPurchases = async (req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error("❌ Vásárlások lekérdezése sikertelen:", err);
+    console.error("Vásárlások lekérdezése sikertelen:", err);
     res.status(500).json({ error: "Szerverhiba" });
   }
 };

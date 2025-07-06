@@ -23,7 +23,7 @@ const Blog = () => {
   return (
     <div className="max-w-screen-xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-center text-olive-800 mb-10">
-        📚 Olvasási tippek és blog
+        Olvasási tippek és blog
       </h1>
       <div className="grid md:grid-cols-3 gap-6">
         {articles.map((article, index) => (

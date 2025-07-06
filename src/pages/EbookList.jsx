@@ -4,7 +4,7 @@ export default function EbookListPage() {
   return (
     <BookListGeneric
       apiUrl="http://localhost:3001/ebooks"
-      title="📱 E-könyvek"
+      title="E-könyvek"
     />
   );
 }

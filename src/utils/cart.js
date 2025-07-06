@@ -27,7 +27,7 @@ export async function addToCartBackend(bookId, quantity = 1, itemType = "physica
       body: JSON.stringify({
         book_id: bookId,
         quantity,
-        item_type: itemType, // 🧠 lehet "physical", "ebook", "audiobook"
+        item_type: itemType, // lehet "physical", "ebook", "audiobook"
       }),
     });
 

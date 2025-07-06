@@ -22,9 +22,17 @@ export default function MyDigitalBooks() {
         });
 
         const data = await res.json();
-        setPurchases(data.filter(item =>
-          item.item_type === "ebook" || item.item_type === "audiobook"
-        ));
+
+        const filtered = data
+          .filter(item => item.item_type === "ebook" || item.item_type === "audiobook")
+          .map((item) => ({
+            ...item,
+            cover_image_url: item.cover_image_url?.startsWith("http")
+              ? item.cover_image_url
+              : `http://localhost:3001${item.cover_image_url}`,
+          }));
+
+        setPurchases(filtered);
       } catch (err) {
         console.error("Hiba a vásárlások lekérdezésekor:", err);
       } finally {
@@ -50,7 +58,7 @@ export default function MyDigitalBooks() {
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
           {purchases.map((book) => (
-            <BookCard key={book.book_id} book={book} />
+            <BookCard key={book.book_id || book.id} book={book} />
           ))}
         </div>
       )}

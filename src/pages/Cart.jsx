@@ -83,11 +83,11 @@ export default function Cart() {
     });
 
     if (res.ok) {
-      alert("✅ Rendelés sikeresen leadva!");
+      alert("Rendelés sikeresen leadva!");
       fetchCart(); // újratölti a kosarat
     } else {
       const err = await res.json();
-      alert("❌ Hiba a rendelés során: " + err.error);
+      alert("Hiba a rendelés során: " + err.error);
     }
   };
 
@@ -103,7 +103,7 @@ export default function Cart() {
 
       {cartItems.length === 0 ? (
         <p className="text-gray-600 text-center text-lg">
-          🛒 A kosarad jelenleg üres. <br />
+           A kosarad jelenleg üres. <br />
           <Link
             to="/books"
             className="text-green-700 font-semibold hover:underline"
@@ -135,9 +135,9 @@ export default function Cart() {
                       Szerző: {item.author}
                     </p>
                     <p className="text-sm text-gray-500 italic">
-                      {item.item_type === 'ebook' && '📱 E-könyv'}
-                      {item.item_type === 'audiobook' && '🎧 Hangoskönyv'}
-                      {item.item_type === 'physical' && '📕 Hagyományos könyv'}
+                      {item.item_type === 'ebook' && 'E-könyv'}
+                      {item.item_type === 'audiobook' && 'Hangoskönyv'}
+                      {item.item_type === 'physical' && 'Hagyományos könyv'}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <button

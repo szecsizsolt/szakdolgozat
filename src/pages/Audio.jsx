@@ -22,11 +22,14 @@ export default function Audio() {
         const audioBook = {
           title: bookData.title,
           author: bookData.author,
-          cover: bookData.cover_image_url || placeholderImage,
+          cover: bookData.cover_image_url?.startsWith("http")
+            ? bookData.cover_image_url
+            : `http://localhost:3001${bookData.cover_image_url}` || placeholderImage,
           narrator: audioData.narrator,
           duration: audioData.duration_min,
           audioUrl: `http://localhost:3001${audioData.audio_url}`,
         };
+
 
         setBook(audioBook);
       } catch (err) {

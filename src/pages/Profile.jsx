@@ -1,5 +1,3 @@
-// src/pages/Profile.jsx
-
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";

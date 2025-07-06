@@ -34,10 +34,10 @@ export default function Register() {
         role: "user", // default role
       });
 
-      alert("✅ Sikeres regisztráció!");
+      alert("Sikeres regisztráció!");
       navigate("/login");
     } catch (error) {
-      console.error("❌ Regisztrációs hiba:", error);
+      console.error(" Regisztrációs hiba:", error);
       alert("Hiba történt: " + error.message);
     }
   };

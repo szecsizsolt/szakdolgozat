@@ -6,6 +6,7 @@ export const getEbooks = async (req, res) => {
       SELECT 
         books.id AS book_id,
         ebooks.id AS id,
+        books.title,
         books.author, books.price, books.cover_image_url, 
         books.publisher, books.language, books.publication_date, 
         books.description, books.categories, books.type,

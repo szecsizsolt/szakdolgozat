@@ -29,7 +29,7 @@ const Home = () => {
 
       <section>
         <h2 className="text-2xl font-extrabold text-center text-green-900 border-b-2 border-yellow-400 w-fit mx-auto pb-2">
-          📚 Ajánlott könyvek
+          Ajánlott könyvek
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-6">
           {dummyBooks.map((book) => (

@@ -30,12 +30,19 @@ export default function BookDetails() {
   useEffect(() => {
     fetch(`http://localhost:3001/books/${id}`)
       .then((res) => res.json())
-      .then(setBook)
+      .then((data) => {
+        // kép URL kiegészítése
+        if (data.cover_image_url && !data.cover_image_url.startsWith("http")) {
+          data.cover_image_url = `http://localhost:3001${data.cover_image_url}`;
+        }
+        setBook(data);
+      })
       .catch((err) => {
         console.error("Könyv betöltési hiba:", err);
         alert("Nem sikerült betölteni a könyv adatokat.");
       });
   }, [id]);
+
 
   // Vásárlás ellenőrzése
   useEffect(() => {
@@ -130,7 +137,7 @@ export default function BookDetails() {
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
-                📖 Olvasás
+                Olvasás
               </button>
             )}
           </div>

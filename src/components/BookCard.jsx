@@ -8,7 +8,7 @@ export default function BookCard({ book }) {
     e.stopPropagation();
 
     try {
-      await addToCartBackend(book.id, 1, book.type); // mindig books.id
+      await addToCartBackend(book.book_id || book.id, 1, book.type);
       alert("Kosárba helyezve!");
     } catch (err) {
       console.error("Kosárba helyezési hiba:", err);
@@ -29,7 +29,7 @@ export default function BookCard({ book }) {
 
   return (
     <Link
-      to={`/book/${book.id}`} // Helyesen a books tábla ID-je
+      to={`/book/${book.book_id || book.id}`}
       className="transform hover:scale-105 transition duration-300 block"
     >
       <div className="bg-[#fefae0] p-5 rounded-2xl shadow-xl hover:shadow-2xl text-center h-full border border-yellow-300">

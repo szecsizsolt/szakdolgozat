@@ -6,18 +6,18 @@ const blogPosts = [
     title: "5 könyv, amit nyáron érdemes elolvasni",
     content: `
 Ezek a történetek lekötnek a vízparton is – fantasy, krimi és önfejlesztés egy csokorban.
-\n\n📘 *A Gyűrűk Ura* – egy klasszikus fantasy utazás.
-\n\n📗 *Az alkimista* – motiváló történet az önkeresésről.
-\n\n📕 *1984* – elgondolkodtató disztópia.
-\n\n📙 *Dűne* – epikus sci-fi világ.
-\n\n📓 *A szolgálólány meséje* – társadalmi kérdésekkel foglalkozó történet.
+\n\n *A Gyűrűk Ura* – egy klasszikus fantasy utazás.
+\n\n *Az alkimista* – motiváló történet az önkeresésről.
+\n\n *1984* – elgondolkodtató disztópia.
+\n\n *Dűne* – epikus sci-fi világ.
+\n\n *A szolgálólány meséje* – társadalmi kérdésekkel foglalkozó történet.
     `,
   },
   {
     id: "2",
     title: "Hogyan válassz könyvet ajándékba?",
     content: `
-🎁 Könyvet ajándékozni mindig jó ötlet, de nehéz eltalálni, mi tetszik másnak.
+ Könyvet ajándékozni mindig jó ötlet, de nehéz eltalálni, mi tetszik másnak.
 \n\nTippek:
 - Figyelj a korosztályra
 - Vedd figyelembe a műfajt, amit olvas
@@ -28,7 +28,7 @@ Ezek a történetek lekötnek a vízparton is – fantasy, krimi és önfejleszt
     id: "3",
     title: "Miért jó papírkönyvet olvasni a képernyő helyett?",
     content: `
-📖 A papírkönyv nem csak olvasás, hanem élmény is:
+ A papírkönyv nem csak olvasás, hanem élmény is:
 - illata van
 - nem fárasztja a szemet
 - jobban segíti az elmélyülést

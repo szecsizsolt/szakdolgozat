@@ -18,14 +18,14 @@ import audiobookRoutes from './routes/audiobookRoutes.js';
 import userRoutes from "./routes/userRoutes.js";
 import uploadRoutes from "./routes/uploads.js";
 
-// ⬇️ __dirname kiszámítása ES Modules környezetben
+// __dirname kiszámítása ES Modules környezetben
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// ⬇️ Környezeti változók betöltése
+//  Környezeti változók betöltése
 dotenv.config();
 
-// ⬇️ Firebase inicializálása
+//  Firebase inicializálása
 const serviceAccount = JSON.parse(
   readFileSync(join(__dirname, 'firebase-service-account.json'), 'utf8')
 );
@@ -38,7 +38,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 📁 Feltöltés beállítása
+//  Feltöltés beállítása
 const storage = multer.diskStorage({
   destination: join(__dirname, 'uploads'),
   filename: (req, file, cb) => {
@@ -49,31 +49,31 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// 📤 Kép feltöltés
+//  Kép feltöltés
 app.post("/upload", upload.single("image"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "Nincs kép feltöltve" });
   res.json({ url: `/uploads/${req.file.filename}` });
 });
 app.use("/uploads", express.static(join(__dirname, 'uploads')));
 
-// 🔀 API route-ok
+//  API route-ok
 app.use('/auth', authRoutes);
 app.use('/books', bookRoutes);
 app.use('/cart', cartRoutes);
-app.use('/orders', orderRoutes); // ⬅️ Ez tartalmazza POST /orders és GET /admin/orders is!
+app.use('/orders', orderRoutes); // ⬅ Ez tartalmazza POST /orders és GET /admin/orders is!
 app.use('/ebooks', ebookRoutes);
 app.use('/audiobooks', audiobookRoutes);
 app.use("/user", userRoutes);
 app.use("/api", uploadRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// 🌍 Teszt route
+// Teszt route
 app.get('/', (req, res) => {
-  res.send('📚 Online Könyvesbolt API működik ✅');
+  res.send('Online Könyvesbolt API működik');
 });
 
-// ⬇️ Szerver indítása (ha ez a belépési pontod)
+//  Szerver indítása (ha ez a belépési pontod)
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`🚀 Szerver fut a ${PORT} porton`);
+  console.log(` Szerver fut a ${PORT} porton`);
 });

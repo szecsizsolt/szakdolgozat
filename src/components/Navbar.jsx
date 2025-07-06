@@ -13,7 +13,7 @@ export default function Navbar() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // 🔐 Lekérjük a Firestore user adatokat
+        // Lekérjük a Firestore user adatokat
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -22,7 +22,7 @@ export default function Navbar() {
           setUserData(null);
         }
 
-        // 🛒 Lekérjük a kosár tartalmat a backendről
+        // Lekérjük a kosár tartalmat a backendről
         try {
           const token = await user.getIdToken();
           const res = await fetch("http://localhost:3001/cart", {
@@ -57,7 +57,7 @@ export default function Navbar() {
           to="/"
           className="text-3xl font-bold text-olive-800 flex items-center gap-2"
         >
-          📚 <span>Könyvesbolt</span>
+           <span>Könyvesbolt</span>
         </Link>
 
         {/* Középső menü */}

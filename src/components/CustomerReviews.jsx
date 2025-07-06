@@ -17,7 +17,7 @@ const CustomerReviews = () => {
   return (
     <section className="mt-16 px-4">
       <h2 className="text-2xl font-bold text-center text-olive-800 mb-8">
-        🌟 Vásárlói vélemények
+        Vásárlói vélemények
       </h2>
       <div className="max-w-screen-xl mx-auto grid md:grid-cols-3 gap-6">
         {reviews.map((review, index) => (

@@ -73,7 +73,7 @@ export const placeOrder = async (req, res) => {
 
     res.status(200).json({ success: true, orderId });
   } catch (err) {
-    console.error("❌ Rendelés leadása sikertelen:", err);
+    console.error("Rendelés leadása sikertelen:", err);
     res.status(500).json({ error: "Szerverhiba a rendelés során" });
   }
 };
@@ -109,7 +109,7 @@ export const getAllOrders = async (req, res) => {
 
     res.json(result.rows);
   } catch (err) {
-    console.error("❌ Rendelések lekérdezése sikertelen:", err);
+    console.error("Rendelések lekérdezése sikertelen:", err);
     res.status(500).json({ error: "Szerverhiba a lekérdezés során" });
   }
 };

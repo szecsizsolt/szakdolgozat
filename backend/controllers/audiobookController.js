@@ -53,7 +53,7 @@ export const createAudiobook = async (req, res) => {
 
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("❌ createAudiobook hiba:", err);
+    console.error("createAudiobook hiba:", err);
     res.status(500).json({ error: "Szerver hiba hangoskönyv létrehozásakor." });
   } finally {
     client.release();
