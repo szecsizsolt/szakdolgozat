@@ -7,7 +7,7 @@ export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
   const auth = getAuth();
 
-  const fetchCart = async () => {
+    const fetchCart = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
@@ -19,8 +19,16 @@ export default function Cart() {
     });
 
     const data = await res.json();
-    setCartItems(data);
+    setCartItems(
+      data.map((item) => ({
+        ...item,
+        cover_image_url: item.cover_image_url?.startsWith("http")
+          ? item.cover_image_url
+          : `http://localhost:3001${item.cover_image_url}`,
+      }))
+    );
   };
+
 
   useEffect(() => {
     fetchCart();

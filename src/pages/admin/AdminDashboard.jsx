@@ -31,17 +31,35 @@ export default function AdminDashboard() {
         >
           Hangoskönyv kezelés
         </button>
+                <button
+          onClick={() => navigate("/admin/orders")}
+          className="bg-yellow-400 hover:bg-yellow-500 text-green-900 py-3 px-6 font-bold "
+        >
+          Rendelések
+        </button>
         <button
           onClick={() => navigate("/admin/blog")}
           className="bg-yellow-400 hover:bg-yellow-500 text-green-900 py-3 px-6 font-bold "
         >
           Blog kezelés
         </button>
-        <button
-          onClick={() => navigate("/admin/orders")}
+                <button
+          onClick={() => navigate("/admin/offers")}
           className="bg-yellow-400 hover:bg-yellow-500 text-green-900 py-3 px-6 font-bold "
         >
-          Rendelések
+          Akció kezelés
+        </button>
+                <button
+          onClick={() => navigate("/admin/homepagem")}
+          className="bg-yellow-400 hover:bg-yellow-500 text-green-900 py-3 px-6 font-bold "
+        >
+          Fő oldal kezelés
+        </button>
+                <button
+          onClick={() => navigate("/admin/urers")}
+          className="bg-yellow-400 hover:bg-yellow-500 text-green-900 py-3 px-6 font-bold "
+        >
+          Felhasználók
         </button>
       </div>
     </div>
