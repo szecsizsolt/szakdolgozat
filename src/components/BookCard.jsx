@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { FaShoppingCart } from "react-icons/fa";
 import { addToCartBackend } from "../utils/cart";
+import placeholderImage from "../assets/peldakonyv.png";
+
 
 export default function BookCard({ book }) {
   const handleAddToCart = async (e) => {
@@ -34,7 +36,7 @@ export default function BookCard({ book }) {
     >
       <div className="bg-[#fefae0] p-5 rounded-2xl shadow-xl hover:shadow-2xl text-center h-full border border-yellow-300">
         <img
-          src={book.cover_image_url || "/placeholder.png"}
+          src={book.cover_image_url || placeholderImage}
           alt={book.title}
           className="w-full h-[220px] object-contain rounded-md mb-3"
         />

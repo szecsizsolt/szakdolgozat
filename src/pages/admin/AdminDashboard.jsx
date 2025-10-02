@@ -53,7 +53,7 @@ export default function AdminDashboard() {
           onClick={() => navigate("/admin/homepagem")}
           className="bg-yellow-400 hover:bg-yellow-500 text-green-900 py-3 px-6 font-bold "
         >
-          Fő oldal kezelés
+          Főoldal kezelés
         </button>
                 <button
           onClick={() => navigate("/admin/urers")}
