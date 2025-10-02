@@ -1,37 +1,28 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { FaShoppingCart, FaStar, FaTrash } from "react-icons/fa";
 import { getAuth } from "firebase/auth";
 import { addToCartBackend } from "../utils/cart";
-import { useNavigate } from "react-router-dom";
 
 export default function BookDetails() {
   const { id } = useParams();
-  const [book, setBook] = useState(null);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
-  const [comments, setComments] = useState([
+  const [book, setBook] = useState(null);          // Könyv adat
+  const [rating, setRating] = useState(5);         // Új vélemény értékelés
+  const [comment, setComment] = useState("");      // Új vélemény szöveg
+  const [comments, setComments] = useState([       // Példa vélemények (később backendből is jöhetnek)
     { rating: 5, text: "Nagyon jó könyv.", date: new Date() },
     { rating: 1, text: "Nekem nem tetszett.", date: new Date() },
   ]);
-  const [hasAccess, setHasAccess] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false); // Vásárlás alapján olvashatóság
   const navigate = useNavigate();
-
-  const handleRead = () => {
-    if (book.type === "ebook") {
-      navigate(`/ebook/${book.id}`);
-    } else if (book.type === "audiobook") {
-      navigate(`/audiobook/${book.id}`);
-    }
-  };
-
   const auth = getAuth();
 
+  // Könyv részletek betöltése
   useEffect(() => {
     fetch(`http://localhost:3001/books/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        // kép URL kiegészítése
+        // Ha relatív a kép elérési út, egészítsük ki
         if (data.cover_image_url && !data.cover_image_url.startsWith("http")) {
           data.cover_image_url = `http://localhost:3001${data.cover_image_url}`;
         }
@@ -43,8 +34,7 @@ export default function BookDetails() {
       });
   }, [id]);
 
-
-  // Vásárlás ellenőrzése
+  // Ellenőrzés: a felhasználó megvásárolta-e az adott e-bookot vagy hangoskönyvet
   useEffect(() => {
     const checkPurchase = async () => {
       try {
@@ -62,7 +52,9 @@ export default function BookDetails() {
         const data = await res.json();
 
         const hasPurchased = data.some(
-          (item) => item.book_id === id && (item.item_type === "ebook" || item.item_type === "audiobook")
+          (item) =>
+            item.book_id === id &&
+            (item.item_type === "ebook" || item.item_type === "audiobook")
         );
 
         setHasAccess(hasPurchased);
@@ -74,15 +66,34 @@ export default function BookDetails() {
     checkPurchase();
   }, [id, auth]);
 
+  // Olvasás gomb logika
+  const handleRead = () => {
+    if (book.type === "ebook") {
+      navigate(`/ebook/${book.id}`);
+    } else if (book.type === "audiobook") {
+      navigate(`/audiobook/${book.id}`);
+    }
+  };
+
+  // Vélemény küldése
   const handleSubmit = (e) => {
     e.preventDefault();
     if (comment.trim() !== "") {
-      setComments([...comments, { rating, text: comment, date: new Date() }]);
+      setComments([
+        ...comments,
+        { rating, text: comment, date: new Date() },
+      ]);
       setComment("");
       setRating(5);
     }
   };
 
+  // Vélemény törlése
+  const handleDelete = (index) => {
+    setComments(comments.filter((_, i) => i !== index));
+  };
+
+  // Kosárhoz adás
   const handleAddToCart = async () => {
     try {
       await addToCartBackend(book.id, 1, book.type);
@@ -93,6 +104,7 @@ export default function BookDetails() {
     }
   };
 
+  // Dátum formázás (véleményekhez)
   const formatDate = (date) => {
     return new Intl.DateTimeFormat("hu-HU", {
       year: "numeric",
@@ -107,6 +119,7 @@ export default function BookDetails() {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-10 space-y-10">
+      {/* Könyv adatok blokk */}
       <div className="flex flex-col md:flex-row gap-10 items-start">
         <img
           src={book.cover_image_url || "/placeholder.png"}
@@ -115,6 +128,7 @@ export default function BookDetails() {
         />
 
         <div className="flex-1 space-y-4 relative w-full">
+          {/* Jobb felső sarok: ár, kosár, olvasás gomb */}
           <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
             <p className="text-2xl font-bold text-gray-800">{book.price} Ft</p>
 
@@ -126,7 +140,6 @@ export default function BookDetails() {
               Kosárba
             </button>
 
-            {/* OLVASÁS gomb feltételesen */}
             {(book.type === "ebook" || book.type === "audiobook") && (
               <button
                 onClick={handleRead}
@@ -142,16 +155,23 @@ export default function BookDetails() {
             )}
           </div>
 
-          <h1 className="text-3xl font-bold text-green-900 pr-40">{book.title}</h1>
+          <h1 className="text-3xl font-bold text-green-900 pr-40">
+            {book.title}
+          </h1>
           <p className="text-lg text-gray-700">
-            Szerző: <span className="font-semibold">{book.author || "Ismeretlen"}</span>
+            Szerző:{" "}
+            <span className="font-semibold">{book.author || "Ismeretlen"}</span>
           </p>
           <p className="text-gray-600">
-            Kiadó: <span className="font-medium">{book.publisher || "Ismeretlen"}</span>
+            Kiadó:{" "}
+            <span className="font-medium">{book.publisher || "Ismeretlen"}</span>
           </p>
           <p className="text-gray-600">
-            Típus: <span className="font-medium">{book.type || "Ismeretlen"}</span>
+            Típus:{" "}
+            <span className="font-medium">{book.type || "Ismeretlen"}</span>
           </p>
+
+          {/* Csillagos értékelés (átlag) */}
           <div className="flex items-center gap-1 text-yellow-500 text-xl">
             {[...Array(book.rating || 4)].map((_, i) => (
               <FaStar key={i} />
@@ -164,7 +184,7 @@ export default function BookDetails() {
         </div>
       </div>
 
-      {/* Vélemény írás */}
+      {/* Új vélemény beküldése */}
       <section className="space-y-4">
         <h2 className="text-xl font-bold text-green-900">Értékelés</h2>
 
@@ -201,7 +221,9 @@ export default function BookDetails() {
       {/* Vélemények listázása */}
       {comments.length > 0 && (
         <section className="space-y-6 mt-10">
-          <h3 className="text-xl font-bold text-green-900">Olvasói vélemények</h3>
+          <h3 className="text-xl font-bold text-green-900">
+            Olvasói vélemények
+          </h3>
           <div className="flex flex-col gap-6">
             {comments.map((c, index) => (
               <div
@@ -222,7 +244,9 @@ export default function BookDetails() {
                   ))}
                 </div>
 
-                <p className="text-xs text-gray-400 mb-1">{formatDate(c.date)}</p>
+                <p className="text-xs text-gray-400 mb-1">
+                  {formatDate(c.date)}
+                </p>
                 <p className="text-gray-700">{c.text}</p>
               </div>
             ))}

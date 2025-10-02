@@ -4,47 +4,23 @@ import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 
-const handleLogin = async () => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-
-    // 🔑 Token lekérése
-    const token = await user.getIdToken();
-
-    // 📬 Backend regisztráció / hitelesítés
-    await fetch("http://localhost:3001/register", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: user.displayName || "Név nincs",
-        email: user.email,
-      }),
-    });
-
-    console.log("Sikeres bejelentkezés és regisztráció a backendnél");
-    // Navigálás vagy állapotfrissítés itt
-  } catch (error) {
-    console.error("Bejelentkezési hiba:", error);
-    setError("Hibás email vagy jelszó");
-  }
-};
-
 export default function Login() {
+  // Űrlap állapotok
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const navigate = useNavigate();
 
+  // Bejelentkezés kezelése
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
+      // Firebase hitelesítés e-mail és jelszó alapján
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
 
-      // Szerepkör lekérdezése Firestore-ból
+      // Felhasználó szerepkörének lekérdezése Firestore-ból
       const docRef = doc(db, "users", uid);
       const docSnap = await getDoc(docRef);
 
@@ -52,20 +28,20 @@ export default function Login() {
         const userData = docSnap.data();
         const role = userData.role;
 
-        // Tárolás localStorage-be (opcionális)
+        // Szerepkör tárolása localStorage-ben (opcionális)
         localStorage.setItem("role", role);
 
         alert("Sikeres bejelentkezés!");
-        // Irányítás role alapján
+
+        // Navigálás szerepkör alapján
         if (role === "admin") {
           navigate("/admin");
         } else {
           navigate("/");
         }
       } else {
-        alert("Nincs jogosultság (nincs user dokumentum).");
+        alert("Nincs jogosultság (a felhasználóhoz nem tartozik dokumentum).");
       }
-
     } catch (error) {
       console.error("Bejelentkezési hiba:", error);
       alert("Hiba történt: " + error.message);
@@ -74,7 +50,11 @@ export default function Login() {
 
   return (
     <div className="max-w-xl mx-auto mt-12 px-8 py-10 bg-white rounded-xl shadow-lg border">
-      <h2 className="text-3xl font-bold text-green-900 mb-6 text-center">Bejelentkezés</h2>
+      <h2 className="text-3xl font-bold text-green-900 mb-6 text-center">
+        Bejelentkezés
+      </h2>
+
+      {/* Bejelentkezési űrlap */}
       <form onSubmit={handleLogin} className="space-y-5">
         <input
           type="email"
@@ -84,6 +64,7 @@ export default function Login() {
           required
           className="w-full border px-4 py-2 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
+
         <input
           type="password"
           placeholder="Jelszó"

@@ -4,10 +4,11 @@ import { Link } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState([]); // Kosár tartalma
   const auth = getAuth();
 
-    const fetchCart = async () => {
+  // Kosár lekérése a backendtől
+  const fetchCart = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
@@ -29,11 +30,11 @@ export default function Cart() {
     );
   };
 
-
   useEffect(() => {
     fetchCart();
   }, []);
 
+  // Darabszám frissítése (PATCH)
   const updateQuantity = async (id, newQuantity) => {
     if (newQuantity < 1) return;
 
@@ -52,6 +53,7 @@ export default function Cart() {
     fetchCart();
   };
 
+  // Elem eltávolítása a kosárból
   const removeFromCart = async (id) => {
     const user = auth.currentUser;
     const token = await user.getIdToken();
@@ -66,6 +68,7 @@ export default function Cart() {
     fetchCart();
   };
 
+  // Kosár teljes törlése
   const clearCart = async () => {
     const user = auth.currentUser;
     const token = await user.getIdToken();
@@ -76,15 +79,17 @@ export default function Cart() {
         Authorization: `Bearer ${token}`,
       },
     });
+
     fetchCart();
   };
 
+  // Megrendelés leadása
   const handleCheckout = async () => {
     const user = auth.currentUser;
     const token = await user.getIdToken();
 
-    const res = await fetch('http://localhost:3001/orders/orders', {
-      method: 'POST',
+    const res = await fetch("http://localhost:3001/orders/orders", {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -92,14 +97,14 @@ export default function Cart() {
 
     if (res.ok) {
       alert("Rendelés sikeresen leadva!");
-      fetchCart(); // újratölti a kosarat
+      fetchCart();
     } else {
       const err = await res.json();
       alert("Hiba a rendelés során: " + err.error);
     }
   };
 
-
+  // Összesítés
   const total = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -107,11 +112,12 @@ export default function Cart() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">
-      <h1 className="text-3xl font-bold text-green-900 mb-6">🛒 Kosár</h1>
+      <h1 className="text-3xl font-bold text-green-900 mb-6">Kosár</h1>
 
+      {/* Ha üres a kosár */}
       {cartItems.length === 0 ? (
         <p className="text-gray-600 text-center text-lg">
-           A kosarad jelenleg üres. <br />
+          A kosarad jelenleg üres. <br />
           <Link
             to="/books"
             className="text-green-700 font-semibold hover:underline"
@@ -121,6 +127,7 @@ export default function Cart() {
         </p>
       ) : (
         <>
+          {/* Kosár elemek listázása */}
           <div className="space-y-6">
             {cartItems.map((item) => (
               <div
@@ -143,10 +150,12 @@ export default function Cart() {
                       Szerző: {item.author}
                     </p>
                     <p className="text-sm text-gray-500 italic">
-                      {item.item_type === 'ebook' && 'E-könyv'}
-                      {item.item_type === 'audiobook' && 'Hangoskönyv'}
-                      {item.item_type === 'physical' && 'Hagyományos könyv'}
+                      {item.item_type === "ebook" && "E-könyv"}
+                      {item.item_type === "audiobook" && "Hangoskönyv"}
+                      {item.item_type === "physical" && "Hagyományos könyv"}
                     </p>
+
+                    {/* Mennyiség állítás */}
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -167,6 +176,7 @@ export default function Cart() {
                   </div>
                 </div>
 
+                {/* Ár és eltávolítás */}
                 <div className="flex flex-col items-end justify-between h-full gap-4">
                   <p className="text-md font-semibold text-gray-800">
                     {item.price * item.quantity} Ft
@@ -183,6 +193,7 @@ export default function Cart() {
             ))}
           </div>
 
+          {/* Összesítés és akció gombok */}
           <div className="mt-8 p-4 bg-yellow-300 rounded-lg flex items-center justify-between shadow-md">
             <p className="text-lg font-bold text-green-900">
               Fizetendő: {total.toLocaleString()} Ft

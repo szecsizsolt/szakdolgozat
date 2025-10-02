@@ -5,10 +5,10 @@ import { ensureUserInDatabase } from '../middleware/ensureUserInDatabase.js';
 
 const router = express.Router();
 
-// Autentikáció + biztosítsd, hogy a felhasználó szerepel az adatbázisban
+// Új rendelés leadása (bejelentkezett felhasználó)
 router.post("/orders", authenticate, ensureUserInDatabase, placeOrder);
 
-// Admin route (admin jogosultság ellenőrzéssel)
+// Összes rendelés lekérése (csak admin)
 router.get("/admin/orders", authenticate, ensureUserInDatabase, isAdmin, getAllOrders);
 
 export default router;

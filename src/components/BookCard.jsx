@@ -3,14 +3,16 @@ import { FaShoppingCart } from "react-icons/fa";
 import { addToCartBackend } from "../utils/cart";
 import placeholderImage from "../assets/peldakonyv.png";
 
-
 export default function BookCard({ book }) {
+  const bookId = book.book_id || book.id; // Egységes azonosító
+
+  // Kosárhoz adás
   const handleAddToCart = async (e) => {
-    e.preventDefault(); // ne navigáljon el a kattintásra
+    e.preventDefault(); // Ne navigáljon el
     e.stopPropagation();
 
     try {
-      await addToCartBackend(book.book_id || book.id, 1, book.type);
+      await addToCartBackend(bookId, 1, book.type);
       alert("Kosárba helyezve!");
     } catch (err) {
       console.error("Kosárba helyezési hiba:", err);
@@ -18,36 +20,39 @@ export default function BookCard({ book }) {
     }
   };
 
+  // Könyv típus megjelenítése
   const renderType = () => {
     switch (book.type) {
       case "ebook":
-        return <p className="text-sm text-blue-600 font-semibold">📱 E-könyv</p>;
+        return <p className="text-sm text-blue-600 font-semibold">E-könyv</p>;
       case "audiobook":
-        return <p className="text-sm text-purple-600 font-semibold">🎧 Hangoskönyv</p>;
+        return <p className="text-sm text-purple-600 font-semibold">Hangoskönyv</p>;
       default:
-        return <p className="text-sm text-gray-700 font-semibold">📕 Hagyományos könyv</p>;
+        return <p className="text-sm text-gray-700 font-semibold">Hagyományos könyv</p>;
     }
   };
 
   return (
     <Link
-      to={`/book/${book.book_id || book.id}`}
+      to={`/book/${bookId}`}
       className="transform hover:scale-105 transition duration-300 block"
     >
       <div className="bg-[#fefae0] p-5 rounded-2xl shadow-xl hover:shadow-2xl text-center h-full border border-yellow-300">
         <img
           src={book.cover_image_url || placeholderImage}
-          alt={book.title}
+          alt={book.title || "Borítókép nincs"}
           className="w-full h-[220px] object-contain rounded-md mb-3"
         />
 
         <h4 className="text-lg font-bold text-green-900">{book.title}</h4>
-        <p className="text-sm text-gray-600">Szerző: {book.author || "Ismeretlen"}</p>
+        <p className="text-sm text-gray-600">
+          Szerző: {book.author || "Ismeretlen"}
+        </p>
 
         {renderType()}
 
         <p className="text-md text-green-900 font-semibold mt-1 mb-4">
-          Ár: {Number(book.price).toLocaleString()} Ft
+          Ár: {Number(book.price || 0).toLocaleString()} Ft
         </p>
 
         <div className="flex justify-center">

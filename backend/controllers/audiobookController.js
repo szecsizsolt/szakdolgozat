@@ -1,5 +1,16 @@
 import pool from '../db.js';
 
+// Segédfüggvény a közös SELECT-hez
+const audiobookSelectQuery = `
+  SELECT 
+    audiobooks.*, 
+    books.title, books.author, books.price, books.cover_image_url, 
+    books.publisher, books.language, books.publication_date, 
+    books.description, books.categories, books.type
+  FROM audiobooks
+  JOIN books ON audiobooks.book_id = books.id
+`;
+
 export const createAudiobook = async (req, res) => {
   const {
     title, author, description, publisher,
@@ -12,8 +23,8 @@ export const createAudiobook = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // Könyv beszúrása a books táblába, típus = 'audiobook'
-    const bookInsert = await client.query(`
+    // Könyv beszúrása
+    const { rows: bookRows } = await client.query(`
       INSERT INTO books (
         id, title, author, description, publisher,
         language, publication_date, price,
@@ -27,26 +38,25 @@ export const createAudiobook = async (req, res) => {
       cover_image_url, categories
     ]);
 
-    const bookId = bookInsert.rows[0].id;
+    const bookId = bookRows[0].id;
+
+    // duration biztonságos konvertálása
+    const safeDuration = duration_min ? Math.round(Number(duration_min)) : null;
 
     // Hangoskönyv adatainak beszúrása
-    const audiobookInsert = await client.query(`
+    const { rows: audioRows } = await client.query(`
       INSERT INTO audiobooks (id, book_id, audio_url, duration_min, narrator)
-      VALUES (uuid_generate_v4(), $1, $2, $3::int, $4)
+      VALUES (uuid_generate_v4(), $1, $2, $3, $4)
       RETURNING id
-    `, [bookId, audio_url, Math.round(parseFloat(duration_min)), narrator]);
+    `, [bookId, audio_url, safeDuration, narrator]);
 
-    // Teljes visszatérési adat a frontendnek
-    const { rows: fullRows } = await client.query(`
-      SELECT audiobooks.*, 
-             books.title, books.author, books.price, books.cover_image_url, 
-             books.publisher, books.language, books.publication_date, 
-             books.description, books.categories,
-             books.type
-      FROM audiobooks
-      JOIN books ON audiobooks.book_id = books.id
-      WHERE audiobooks.id = $1
-    `, [audiobookInsert.rows[0].id]);
+    const audiobookId = audioRows[0].id;
+
+    // Vissza a teljes adat
+    const { rows: fullRows } = await client.query(
+      `${audiobookSelectQuery} WHERE audiobooks.id = $1`,
+      [audiobookId]
+    );
 
     await client.query("COMMIT");
     res.status(201).json(fullRows[0]);
@@ -59,8 +69,6 @@ export const createAudiobook = async (req, res) => {
     client.release();
   }
 };
-
-
 
 export const updateAudiobook = async (req, res) => {
   const audiobookId = req.params.id;
@@ -78,11 +86,13 @@ export const updateAudiobook = async (req, res) => {
       'SELECT book_id FROM audiobooks WHERE id = $1', [audiobookId]
     );
     if (rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Hangoskönyv nem található' });
     }
 
     const bookId = rows[0].book_id;
 
+    // Books update
     await client.query(`
       UPDATE books
       SET title = $1, author = $2, description = $3, publisher = $4,
@@ -95,30 +105,27 @@ export const updateAudiobook = async (req, res) => {
       cover_image_url, categories, bookId
     ]);
 
+    // Audiobooks update
+    const safeDuration = duration_min ? Math.round(Number(duration_min)) : null;
+
     await client.query(`
       UPDATE audiobooks
       SET audio_url = $1, duration_min = $2, narrator = $3
       WHERE id = $4
     `, [
-      audio_url, duration_min, narrator, audiobookId
+      audio_url, safeDuration, narrator, audiobookId
     ]);
 
-    const { rows: updatedRows } = await client.query(`
-      SELECT audiobooks.*, 
-             books.title, books.author, books.price, books.cover_image_url, 
-             books.publisher, books.language, books.publication_date, 
-             books.description, books.categories,
-             books.type
-      FROM audiobooks
-      JOIN books ON audiobooks.book_id = books.id
-      WHERE audiobooks.id = $1
-    `, [audiobookId]);
+    const { rows: updatedRows } = await client.query(
+      `${audiobookSelectQuery} WHERE audiobooks.id = $1`,
+      [audiobookId]
+    );
 
     await client.query('COMMIT');
     res.json(updatedRows[0]);
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
+    console.error("updateAudiobook hiba:", err);
     res.status(500).json({ error: 'Szerver hiba hangoskönyv frissítésekor.' });
   } finally {
     client.release();
@@ -128,16 +135,11 @@ export const updateAudiobook = async (req, res) => {
 export const getAudiobookById = async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query(`
-      SELECT audiobooks.*, 
-             books.title, books.author, books.price, books.cover_image_url, 
-             books.publisher, books.language, books.publication_date, 
-             books.description, books.categories,
-             books.type
-      FROM audiobooks
-      JOIN books ON audiobooks.book_id = books.id
-      WHERE audiobooks.id = $1 OR books.id = $1
-    `, [id]);
+    // Biztonságosan csak audiobooks.id alapján keresünk
+    const result = await pool.query(
+      `${audiobookSelectQuery} WHERE audiobooks.id = $1`,
+      [id]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Nincs ilyen hangoskönyv" });
@@ -145,7 +147,7 @@ export const getAudiobookById = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("Lekérdezési hiba:", err);
+    console.error("getAudiobookById hiba:", err);
     res.status(500).json({ error: "Szerver hiba hangoskönyv lekérdezésekor." });
   }
 };
@@ -157,10 +159,12 @@ export const deleteAudiobook = async (req, res) => {
     await client.query('BEGIN');
 
     const { rows } = await client.query(
-      'SELECT book_id FROM audiobooks WHERE id = $1', [audiobookId]
+      'SELECT book_id FROM audiobooks WHERE id = $1',
+      [audiobookId]
     );
 
     if (rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Hangoskönyv nem található' });
     }
 
@@ -173,7 +177,7 @@ export const deleteAudiobook = async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
+    console.error("deleteAudiobook hiba:", err);
     res.status(500).json({ error: 'Szerver hiba hangoskönyv törlésekor.' });
   } finally {
     client.release();
@@ -189,14 +193,13 @@ export const getAllAudiobooks = async (req, res) => {
         books.title, books.author, books.price, books.cover_image_url, 
         books.publisher, books.language, books.publication_date, 
         books.description, books.categories, books.type,
-        audiobooks.audio_url, audiobooks.duration_min
+        audiobooks.audio_url, audiobooks.duration_min, audiobooks.narrator
       FROM audiobooks
       JOIN books ON audiobooks.book_id = books.id
     `);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error("getAllAudiobooks hiba:", err);
     res.status(500).json({ error: 'Szerver hiba hangoskönyvek lekérdezésekor.' });
   }
 };
-

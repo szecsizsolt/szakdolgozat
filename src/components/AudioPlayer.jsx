@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FaPlay, FaPause, FaForward, FaBackward, FaVolumeUp, FaVolumeMute} from "react-icons/fa";
-
+import { FaPlay, FaPause, FaForward, FaBackward, FaVolumeUp, FaVolumeMute } from "react-icons/fa";
 
 export default function AudioPlayer({ book }) {
   const audioRef = useRef(null);
@@ -10,7 +9,9 @@ export default function AudioPlayer({ book }) {
   const [speed, setSpeed] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
 
+  const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
+  // Lejátszás indítása / szüneteltetése
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (isPlaying) {
@@ -21,34 +22,27 @@ export default function AudioPlayer({ book }) {
     setIsPlaying(!isPlaying);
   };
 
+  // Idő frissítése
   const handleTimeUpdate = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
       setDuration(audioRef.current.duration || 0);
     }
   };
+
+  // Némítás kapcsolása
   const toggleMute = () => {
-  if (audioRef.current) {
-    audioRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
-  }
-};
-
-  const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
-
-  const handleSpeedToggle = () => {
-    const newSpeed = speed === 1 ? 1.5 : 1;
-    setSpeed(newSpeed);
     if (audioRef.current) {
-      audioRef.current.playbackRate = newSpeed;
+      audioRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
     }
   };
 
+  // Idő formázása mm:ss alakban
   const formatTime = (time) => {
+    if (!time || isNaN(time)) return "0:00";
     const min = Math.floor(time / 60);
-    const sec = Math.floor(time % 60)
-      .toString()
-      .padStart(2, "0");
+    const sec = Math.floor(time % 60).toString().padStart(2, "0");
     return `${min}:${sec}`;
   };
 
@@ -61,14 +55,14 @@ export default function AudioPlayer({ book }) {
 
   return (
     <div className="flex flex-col md:flex-row items-start gap-8">
-      {/* Book Cover */}
+      {/* Könyv borító */}
       <img
         src={book.cover}
         alt={book.title}
         className="w-64 h-auto shadow-lg rounded-md"
       />
 
-      {/* Audio Player */}
+      {/* Lejátszó rész */}
       <div className="flex-1 space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-green-900">{book.title}</h1>
@@ -77,15 +71,15 @@ export default function AudioPlayer({ book }) {
           {book.duration && <p className="text-sm text-gray-500">Hossz: {book.duration} perc</p>}
         </div>
 
-        {/* Audio element */}
-      <audio
-        ref={audioRef}
-        src={book.audioUrl}
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={() => setIsPlaying(false)}
-      />
+        {/* Audio elem */}
+        <audio
+          ref={audioRef}
+          src={book.audioUrl}
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={() => setIsPlaying(false)}
+        />
 
-        {/* Progress */}
+        {/* Progress bar */}
         <div className="flex items-center justify-between text-sm text-gray-600 font-medium">
           <span>{formatTime(currentTime)}</span>
 
@@ -94,8 +88,7 @@ export default function AudioPlayer({ book }) {
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const clickX = e.clientX - rect.left;
-              const width = rect.width;
-              const percent = clickX / width;
+              const percent = clickX / rect.width;
               if (audioRef.current && duration) {
                 audioRef.current.currentTime = percent * duration;
               }
@@ -104,42 +97,54 @@ export default function AudioPlayer({ book }) {
             <div
               className="h-full bg-green-500"
               style={{ width: `${(currentTime / duration) * 100 || 0}%` }}
-            ></div>
+            />
           </div>
 
           <span>{formatTime(duration)}</span>
         </div>
 
-
-        {/* Controls */}
+        {/* Vezérlők */}
         <div className="flex justify-center items-center gap-6 mt-4 text-2xl text-green-900">
+          {/* Sebesség választó */}
           <select
-  value={speed}
-  onChange={(e) => {
-    const newSpeed = parseFloat(e.target.value);
-    setSpeed(newSpeed);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = newSpeed;
-    }
-  }}
-  className="text-sm border rounded px-2 py-1"
->
-  {speeds.map((s) => (
-    <option key={s} value={s}>
-      {s}x
-    </option>
-  ))}
-</select>
+            value={speed}
+            onChange={(e) => {
+              const newSpeed = parseFloat(e.target.value);
+              setSpeed(newSpeed);
+              if (audioRef.current) {
+                audioRef.current.playbackRate = newSpeed;
+              }
+            }}
+            className="text-sm border rounded px-2 py-1"
+          >
+            {speeds.map((s) => (
+              <option key={s} value={s}>
+                {s}x
+              </option>
+            ))}
+          </select>
 
-          <FaBackward className="cursor-pointer hover:text-green-700" onClick={() => {
-            if (audioRef.current) audioRef.current.currentTime -= 10;
-          }} />
+          {/* 10 másodperces léptetés */}
+          <FaBackward
+            className="cursor-pointer hover:text-green-700"
+            onClick={() => {
+              if (audioRef.current) audioRef.current.currentTime -= 10;
+            }}
+          />
+
+          {/* Play / Pause */}
           <button onClick={togglePlay} className="text-4xl">
             {isPlaying ? <FaPause /> : <FaPlay />}
           </button>
-          <FaForward className="cursor-pointer hover:text-green-700" onClick={() => {
-            if (audioRef.current) audioRef.current.currentTime += 10;
-          }} />
+
+          <FaForward
+            className="cursor-pointer hover:text-green-700"
+            onClick={() => {
+              if (audioRef.current) audioRef.current.currentTime += 10;
+            }}
+          />
+
+          {/* Némítás */}
           <button onClick={toggleMute}>
             {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
           </button>

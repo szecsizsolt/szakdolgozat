@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, setDoc } from "firebase/firestore";
 
 export default function Register() {
+  // Űrlap állapot: felhasználói adatok
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -14,6 +15,7 @@ export default function Register() {
 
   const navigate = useNavigate();
 
+  // Input változás kezelése (dinamikus állapotfrissítés név alapján)
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -21,31 +23,44 @@ export default function Register() {
     }));
   };
 
+  // Regisztrációs logika
   const handleRegister = async (e) => {
     e.preventDefault();
+
     try {
-      const userCred = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      // Firebase hitelesítés (új felhasználó létrehozása)
+      const userCred = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
       const uid = userCred.user.uid;
 
+      // Felhasználó mentése Firestore "users" kollekcióba
       await setDoc(doc(db, "users", uid), {
         uid,
         email: formData.email,
         name: `${formData.firstName} ${formData.lastName}`,
-        role: "user", // default role
+        role: "user", // alapértelmezett szerepkör
       });
 
       alert("Sikeres regisztráció!");
       navigate("/login");
     } catch (error) {
-      console.error(" Regisztrációs hiba:", error);
+      console.error("Regisztrációs hiba:", error);
       alert("Hiba történt: " + error.message);
     }
   };
 
   return (
     <div className="max-w-xl mx-auto mt-12 px-8 py-10 bg-white rounded-xl shadow-lg border">
-      <h2 className="text-3xl font-bold text-green-900 mb-6 text-center">Regisztráció</h2>
+      <h2 className="text-3xl font-bold text-green-900 mb-6 text-center">
+        Regisztráció
+      </h2>
+
+      {/* Regisztrációs űrlap */}
       <form onSubmit={handleRegister} className="space-y-5">
+        {/* Névmezők (vezetéknév + keresztnév) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input
             type="text"
@@ -67,6 +82,7 @@ export default function Register() {
           />
         </div>
 
+        {/* Email mező */}
         <input
           type="email"
           name="email"
@@ -76,6 +92,8 @@ export default function Register() {
           required
           className="w-full border px-4 py-2 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
+
+        {/* Jelszó mező */}
         <input
           type="password"
           name="password"
@@ -86,6 +104,7 @@ export default function Register() {
           className="w-full border px-4 py-2 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
 
+        {/* Beküldés gomb */}
         <button
           type="submit"
           className="w-full bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold py-2 rounded shadow transition"

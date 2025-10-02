@@ -1,32 +1,27 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const categories = [
-  "Regény", "Gyerek", "Életmód", "Tudomány", "Történelem", "Fantasy", "Sci-fi"
+  "Regény", "Gyerek", "Életmód", "Tudomány",
+  "Történelem", "Fantasy", "Sci-fi"
 ];
 
-const CategorySlider = () => {
+export default function CategorySlider({ visibleCount = 3 }) {
   const [startIndex, setStartIndex] = useState(0);
-
   const total = categories.length;
 
   const prev = () => {
-    setStartIndex((prevIndex) =>
-      (prevIndex - 1 + total) % total
-    );
+    setStartIndex((prevIndex) => (prevIndex - 1 + total) % total);
   };
 
   const next = () => {
-    setStartIndex((prevIndex) =>
-      (prevIndex + 1) % total
-    );
+    setStartIndex((prevIndex) => (prevIndex + 1) % total);
   };
 
-  const visibleCategories = [
-    categories[startIndex],
-    categories[(startIndex + 1) % total],
-    categories[(startIndex + 2) % total]
-  ];
+  const visibleCategories = Array.from({ length: visibleCount }, (_, i) =>
+    categories[(startIndex + i) % total]
+  );
 
   return (
     <div className="flex justify-center items-center space-x-4 mt-6">
@@ -40,12 +35,14 @@ const CategorySlider = () => {
 
       {/* Kategóriák */}
       {visibleCategories.map((cat, index) => (
-        <div
+        <Link
+          to={`/category/${cat.toLowerCase()}`}
           key={index}
-          className="w-64 h-24 bg-gray-200 hover:bg-yellow-200 rounded-2xl text-lg font-semibold flex items-center justify-center"
+          className="w-40 sm:w-64 h-16 sm:h-24 bg-gray-200 hover:bg-yellow-200 rounded-2xl 
+                     text-lg font-semibold flex items-center justify-center transition-transform hover:scale-105"
         >
           {cat}
-        </div>
+        </Link>
       ))}
 
       {/* Jobb nyíl */}
@@ -57,6 +54,4 @@ const CategorySlider = () => {
       </button>
     </div>
   );
-};
-
-export default CategorySlider;
+}

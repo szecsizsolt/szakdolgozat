@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { auth } from "../../firebase";
 
+// Kategória opciók
 const CATEGORY_OPTIONS = [
   "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
   "Sci-fi", "Fantasy", "Életrajz", "Önfejlesztés", "Történelem",
@@ -11,13 +12,14 @@ const CATEGORY_OPTIONS = [
 ];
 
 export default function EbookAdminPage() {
-  const [ebooks, setEbooks] = useState([]);
-  const [newEbook, setNewEbook] = useState({ stock: 0 });
-  const [editingEbook, setEditingEbook] = useState(null);
-  const [search, setSearch] = useState("");
+  const [ebooks, setEbooks] = useState([]);                  // E-könyvek listája
+  const [newEbook, setNewEbook] = useState({ stock: 0 });    // Új e-könyv alapállapot
+  const [editingEbook, setEditingEbook] = useState(null);    // Aktívan szerkesztett e-könyv
+  const [search, setSearch] = useState("");                  // Keresés mező
 
-  const active = editingEbook || newEbook;
+  const active = editingEbook || newEbook; // Aktuálisan szerkesztett vagy új könyv adatai
 
+  // E-könyvek betöltése komponens indulásakor
   useEffect(() => {
     fetch("/api/ebooks")
       .then((res) => res.json())
@@ -25,6 +27,7 @@ export default function EbookAdminPage() {
       .catch((err) => console.error("E-könyvek betöltése hiba:", err));
   }, []);
 
+  // Input mezők változásának kezelése
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     editingEbook
@@ -32,6 +35,7 @@ export default function EbookAdminPage() {
       : setNewEbook({ ...newEbook, [name]: value });
   };
 
+  // Kategória kiválasztás
   const handleCategoryChange = (e) => {
     const selected = [e.target.value];
     editingEbook
@@ -39,6 +43,7 @@ export default function EbookAdminPage() {
       : setNewEbook({ ...newEbook, categories: selected });
   };
 
+  // Borítókép feltöltése
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -53,6 +58,7 @@ export default function EbookAdminPage() {
       });
       if (!res.ok) throw new Error("Feltöltési hiba");
       const data = await res.json();
+
       const update = { cover_image_url: data.url };
       editingEbook
         ? setEditingEbook({ ...editingEbook, ...update })
@@ -63,6 +69,7 @@ export default function EbookAdminPage() {
     }
   };
 
+  // E-könyv fájl feltöltése (.pdf vagy .txt)
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -75,7 +82,6 @@ export default function EbookAdminPage() {
         method: "POST",
         body: formData,
       });
-
       if (!res.ok) throw new Error("Feltöltési hiba");
 
       const data = await res.json();
@@ -97,6 +103,7 @@ export default function EbookAdminPage() {
     }
   };
 
+  // Mentés (új vagy meglévő frissítése)
   const handleSave = async () => {
     const token = await auth.currentUser.getIdToken();
     const method = editingEbook ? "PATCH" : "POST";
@@ -112,6 +119,7 @@ export default function EbookAdminPage() {
         body: JSON.stringify(active),
       });
       if (!res.ok) throw new Error(await res.text());
+
       const data = await res.json();
       if (editingEbook) {
         setEbooks(ebooks.map((b) => (b.id === data.id ? data : b)));
@@ -127,6 +135,7 @@ export default function EbookAdminPage() {
     }
   };
 
+  // Törlés
   const handleDelete = async (id) => {
     const token = await auth.currentUser.getIdToken();
     try {
@@ -141,6 +150,7 @@ export default function EbookAdminPage() {
     }
   };
 
+  // Keresés szűrés
   const filtered = ebooks.filter((e) =>
     e.title?.toLowerCase().includes(search.toLowerCase()) ||
     e.author?.toLowerCase().includes(search.toLowerCase())
@@ -148,12 +158,25 @@ export default function EbookAdminPage() {
 
   return (
     <div className="max-w-5xl mx-auto mt-10 px-6 py-8 bg-white rounded shadow border">
-      <h1 className="text-3xl font-bold text-green-900 mb-6">Admin – E-könyvkezelés</h1>
+      <h1 className="text-3xl font-bold text-green-900 mb-6">
+        Admin – E-könyvkezelés
+      </h1>
 
+      {/* Új vagy szerkesztés űrlap */}
       <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-4">{editingEbook ? "E-könyv szerkesztése" : "Új e-könyv hozzáadása"}</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          {editingEbook ? "E-könyv szerkesztése" : "Új e-könyv hozzáadása"}
+        </h2>
         <div className="grid grid-cols-2 gap-4 mb-4">
-          {[["title", "Cím"], ["author", "Szerző"], ["publisher", "Kiadó"], ["language", "Nyelv"], ["publication_date", "Megjelenés (ÉÉÉÉ-HH-NN)"], ["price", "Ár (Ft)"]].map(([field, label]) => (
+          {/* Alap mezők */}
+          {[
+            ["title", "Cím"],
+            ["author", "Szerző"],
+            ["publisher", "Kiadó"],
+            ["language", "Nyelv"],
+            ["publication_date", "Megjelenés (ÉÉÉÉ-HH-NN)"],
+            ["price", "Ár (Ft)"],
+          ].map(([field, label]) => (
             <input
               key={field}
               name={field}
@@ -164,6 +187,7 @@ export default function EbookAdminPage() {
             />
           ))}
 
+          {/* Leírás */}
           <textarea
             name="description"
             placeholder="Leírás"
@@ -172,6 +196,7 @@ export default function EbookAdminPage() {
             className="border p-2 rounded col-span-2"
           />
 
+          {/* Kategória */}
           <select
             value={active.categories?.[0] || ""}
             onChange={handleCategoryChange}
@@ -179,17 +204,29 @@ export default function EbookAdminPage() {
           >
             <option value="">-- Válassz kategóriát --</option>
             {CATEGORY_OPTIONS.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
             ))}
           </select>
 
+          {/* Borítókép */}
           <input type="file" accept="image/*" onChange={handleImageUpload} className="border p-2 rounded" />
           {active.cover_image_url && (
-            <img src={`http://localhost:3001${active.cover_image_url}`} alt="Borító" className="w-32 h-auto" />
+            <img
+              src={active.cover_image_url.startsWith("http")
+                ? active.cover_image_url
+                : `http://localhost:3001${active.cover_image_url}`}
+              alt="Borító"
+              className="w-32 h-auto"
+            />
           )}
 
+          {/* Fájlfeltöltés */}
           <div className="col-span-2">
-            <label className="block mb-1 text-sm font-medium">E-könyv fájl (.pdf vagy .txt)</label>
+            <label className="block mb-1 text-sm font-medium">
+              E-könyv fájl (.pdf vagy .txt)
+            </label>
             <input
               type="file"
               accept=".pdf,.txt"
@@ -204,7 +241,11 @@ export default function EbookAdminPage() {
           </div>
         </div>
 
-        <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        {/* Mentés / Mégse */}
+        <button
+          onClick={handleSave}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
           {editingEbook ? "Mentés" : "E-könyv hozzáadása"}
         </button>
         {editingEbook && (
@@ -217,6 +258,7 @@ export default function EbookAdminPage() {
         )}
       </div>
 
+      {/* Keresőmező */}
       <input
         type="text"
         placeholder="Keresés cím vagy szerző szerint..."
@@ -225,9 +267,13 @@ export default function EbookAdminPage() {
         className="border px-3 py-2 rounded mb-6 w-full"
       />
 
+      {/* Lista */}
       <h2 className="text-xl font-semibold mb-4">E-könyvek listája</h2>
       {filtered.map((book) => (
-        <div key={book.id} className="border p-4 rounded mb-4 flex justify-between items-start">
+        <div
+          key={book.id}
+          className="border p-4 rounded mb-4 flex justify-between items-start"
+        >
           <div>
             <h3 className="text-lg font-bold">{book.title}</h3>
             <p className="text-sm text-gray-600">Szerző: {book.author}</p>
@@ -236,14 +282,26 @@ export default function EbookAdminPage() {
               Formátum: {book.file_format} | Méret: {book.file_size_mb} MB
             </p>
             {book.cover_image_url && (
-              <img src={`http://localhost:3001${book.cover_image_url}`} alt="Borító" className="w-24 mt-2" />
+              <img
+                src={book.cover_image_url.startsWith("http")
+                  ? book.cover_image_url
+                  : `http://localhost:3001${book.cover_image_url}`}
+                alt="Borító"
+                className="w-24 mt-2"
+              />
             )}
           </div>
           <div className="space-x-2">
-            <button onClick={() => setEditingEbook(book)} className="border border-gray-300 px-3 py-1 rounded hover:bg-gray-100">
+            <button
+              onClick={() => setEditingEbook(book)}
+              className="border border-gray-300 px-3 py-1 rounded hover:bg-gray-100"
+            >
               Módosítás
             </button>
-            <button onClick={() => handleDelete(book.id)} className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
+            <button
+              onClick={() => handleDelete(book.id)}
+              className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+            >
               Törlés
             </button>
           </div>

@@ -5,10 +5,15 @@ import { useNavigate } from "react-router-dom";
 export default function Profile() {
   const navigate = useNavigate();
 
+  // Kijelentkezés kezelése
   const handleLogout = async () => {
     try {
+      // Firebase kijelentkezés
       await signOut(auth);
+
       alert("Sikeres kijelentkezés!");
+
+      // Visszairányítás a kezdőoldalra
       navigate("/");
     } catch (error) {
       console.error("Hiba a kijelentkezéskor:", error);
@@ -19,6 +24,8 @@ export default function Profile() {
   return (
     <div className="max-w-xl mx-auto mt-12 px-8 py-10 bg-white rounded-xl shadow-lg border text-center">
       <h2 className="text-3xl font-bold text-green-900 mb-6">Profil</h2>
+
+      {/* Kijelentkezés gomb */}
       <button
         onClick={handleLogout}
         className="bg-red-500 hover:bg-red-600 text-white font-bold px-6 py-2 rounded shadow"

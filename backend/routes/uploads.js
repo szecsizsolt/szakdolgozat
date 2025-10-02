@@ -5,21 +5,21 @@ import fs from "fs";
 
 const router = express.Router();
 
-// Fájlnév normalizáló – ékezetek eltávolítása, biztonságos név
+// Fájlnév tisztítás – ékezetek és speciális karakterek eltávolítása
 function sanitizeFileName(filename) {
   return filename
-    .normalize("NFD") // Ékezetes karakterek lebontása
-    .replace(/[\u0300-\u036f]/g, "") // ékezetek eltávolítása
-    .replace(/[^\w.-]/g, "_"); // minden nem engedélyezett karakter _ lesz
+    .normalize("NFD") // lebontja az ékezeteket
+    .replace(/[\u0300-\u036f]/g, "") // törli az ékezeteket
+    .replace(/[^\w.-]/g, "_"); // nem engedélyezett karakter helyett _
 }
 
-// Biztosítsd, hogy az uploads/ mappa létezik
+// Feltöltési mappa létrehozása, ha nem létezik
 const uploadDir = "uploads";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Multer konfiguráció – fájlok mentése egyedi, tisztított névvel
+// Multer konfiguráció – fájlok egyedi névvel mentése
 const storage = multer.diskStorage({
   destination: uploadDir,
   filename: (req, file, cb) => {
@@ -31,10 +31,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-/**
- * E-book fájl feltöltés
- * Vár: "file" kulcs alatt PDF vagy TXT
- */
+// E-könyv feltöltés (PDF/TXT)
 router.post("/upload/ebook", upload.single("file"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "Nincs fájl feltöltve." });
@@ -52,10 +49,7 @@ router.post("/upload/ebook", upload.single("file"), (req, res) => {
   });
 });
 
-/**
- * Hangoskönyv fájl feltöltés
- * Vár: "audio" kulcs alatt MP3 fájl
- */
+// Hangoskönyv feltöltés (MP3)
 router.post("/upload/audio", upload.single("audio"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "Nincs fájl feltöltve." });
@@ -70,7 +64,7 @@ router.post("/upload/audio", upload.single("audio"), (req, res) => {
     audio_url: audioUrl,
     file_format: fileFormat,
     file_size_mb: parseFloat(fileSizeMb),
-    duration_min: 3.5, // ideiglenes érték (később lehet analizálni)
+    duration_min: 3.5, // ideiglenes érték
   });
 });
 

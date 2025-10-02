@@ -11,13 +11,15 @@ const CATEGORY_OPTIONS = [
 ];
 
 export default function AudiobookAdminPage() {
-  const [audiobooks, setAudiobooks] = useState([]);
+  const [audiobooks, setAudiobooks] = useState([]);            // Hangoskönyvek listája
   const [newAudiobook, setNewAudiobook] = useState({ stock: 0 });
-  const [editingAudiobook, setEditingAudiobook] = useState(null);
-  const [search, setSearch] = useState("");
+  const [editingAudiobook, setEditingAudiobook] = useState(null); // Jelenleg szerkesztett könyv
+  const [search, setSearch] = useState("");                       // Keresés
 
+  // Az aktív (új vagy szerkesztett) hangoskönyv
   const active = editingAudiobook || newAudiobook;
 
+  // Kezdeti betöltés
   useEffect(() => {
     fetch("/api/audiobooks")
       .then((res) => res.json())
@@ -25,6 +27,7 @@ export default function AudiobookAdminPage() {
       .catch((err) => console.error("Hangoskönyvek betöltési hiba:", err));
   }, []);
 
+  // Input mezők kezelése
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     editingAudiobook
@@ -32,6 +35,7 @@ export default function AudiobookAdminPage() {
       : setNewAudiobook({ ...newAudiobook, [name]: value });
   };
 
+  // Kategória választás
   const handleCategoryChange = (e) => {
     const selected = [e.target.value];
     editingAudiobook
@@ -39,6 +43,7 @@ export default function AudiobookAdminPage() {
       : setNewAudiobook({ ...newAudiobook, categories: selected });
   };
 
+  // Borítókép feltöltés
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -53,6 +58,7 @@ export default function AudiobookAdminPage() {
       });
       if (!res.ok) throw new Error("Feltöltési hiba");
       const data = await res.json();
+
       const update = { cover_image_url: data.url };
       editingAudiobook
         ? setEditingAudiobook({ ...editingAudiobook, ...update })
@@ -63,6 +69,41 @@ export default function AudiobookAdminPage() {
     }
   };
 
+  // Hangfájl feltöltés
+  const handleAudioUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("audio", file);
+
+    try {
+      const res = await fetch("http://localhost:3001/api/upload/audio", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Feltöltési hiba");
+
+      const data = await res.json();
+
+      const update = {
+        audio_url: data.audio_url,
+        duration_min: data.duration_min, // egységes kulcs
+      };
+
+      editingAudiobook
+        ? setEditingAudiobook({ ...editingAudiobook, ...update })
+        : setNewAudiobook({ ...newAudiobook, ...update });
+
+      alert("Fájl feltöltve: " + file.name);
+    } catch (err) {
+      console.error(err);
+      alert("Nem sikerült feltölteni a hangfájlt.");
+    }
+  };
+
+  // Mentés (új vagy meglévő módosítása)
   const handleSave = async () => {
     const token = await auth.currentUser.getIdToken();
     const method = editingAudiobook ? "PATCH" : "POST";
@@ -84,9 +125,11 @@ export default function AudiobookAdminPage() {
       const data = await res.json();
 
       if (editingAudiobook) {
+        // Frissítés a listában
         setAudiobooks(audiobooks.map((b) => (b.id === data.id ? data : b)));
         setEditingAudiobook(null);
       } else {
+        // Új hozzáadás
         setAudiobooks([...audiobooks, data]);
         setNewAudiobook({ stock: 0 });
       }
@@ -98,69 +141,43 @@ export default function AudiobookAdminPage() {
     }
   };
 
+  // Törlés
   const handleDelete = async (id) => {
-  const token = await auth.currentUser.getIdToken();
-  try {
-    const res = await fetch(`/api/audiobooks/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) throw new Error("Törlés sikertelen");
-    setAudiobooks(audiobooks.filter((b) => b.id !== id));
-  } catch (err) {
-    console.error("Törlés hiba:", err);
-  }
-};
+    const token = await auth.currentUser.getIdToken();
+    try {
+      const res = await fetch(`/api/audiobooks/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Törlés sikertelen");
+      setAudiobooks(audiobooks.filter((b) => b.id !== id));
+    } catch (err) {
+      console.error("Törlés hiba:", err);
+    }
+  };
 
-const handleAudioUpload = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  const formData = new FormData();
-  formData.append("audio", file);
-
-  try {
-    const res = await fetch("http://localhost:3001/api/upload/audio", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!res.ok) throw new Error("Feltöltési hiba");
-
-    const data = await res.json();
-
-    const update = {
-      audio_url: data.audio_url, // helyes kulcs
-      duration_min: data.duration_min, // ideiglenes vagy becsült hossz
-    };
-
-    editingAudiobook
-      ? setEditingAudiobook({ ...editingAudiobook, ...update })
-      : setNewAudiobook({ ...newAudiobook, ...update });
-
-    alert("Fájl feltöltve: " + file.name);
-  } catch (err) {
-    console.error(err);
-    alert("Nem sikerült feltölteni a hangfájlt.");
-  }
-};
-
-
-
-  const filtered = audiobooks.filter((e) =>
-    e.title?.toLowerCase().includes(search.toLowerCase()) ||
-    e.author?.toLowerCase().includes(search.toLowerCase())
+  // Keresési szűrés
+  const filtered = audiobooks.filter(
+    (e) =>
+      e.title?.toLowerCase().includes(search.toLowerCase()) ||
+      e.author?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="max-w-5xl mx-auto mt-10 px-6 py-8 bg-white rounded shadow border">
-      <h1 className="text-3xl font-bold text-green-900 mb-6">Admin – Hangoskönyv-kezelés</h1>
+      <h1 className="text-3xl font-bold text-green-900 mb-6">
+        Admin – Hangoskönyv-kezelés
+      </h1>
 
+      {/* Új vagy szerkesztett űrlap */}
       <div className="mb-10">
         <h2 className="text-xl font-semibold mb-4">
-          {editingAudiobook ? "Hangoskönyv szerkesztése" : "Új hangoskönyv hozzáadása"}
+          {editingAudiobook
+            ? "Hangoskönyv szerkesztése"
+            : "Új hangoskönyv hozzáadása"}
         </h2>
         <div className="grid grid-cols-2 gap-4 mb-4">
+          {/* Szöveges mezők */}
           {[
             ["title", "Cím"],
             ["author", "Szerző"],
@@ -179,6 +196,7 @@ const handleAudioUpload = async (e) => {
               className="border p-2 rounded"
             />
           ))}
+          {/* Leírás */}
           <textarea
             name="description"
             placeholder="Leírás"
@@ -186,6 +204,7 @@ const handleAudioUpload = async (e) => {
             onChange={handleInputChange}
             className="border p-2 rounded col-span-2"
           />
+          {/* Kategória */}
           <select
             value={active.categories?.[0] || ""}
             onChange={handleCategoryChange}
@@ -193,13 +212,26 @@ const handleAudioUpload = async (e) => {
           >
             <option value="">-- Válassz kategóriát --</option>
             {CATEGORY_OPTIONS.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
             ))}
           </select>
-          <input type="file" accept="image/*" onChange={handleImageUpload} className="border p-2 rounded" />
+          {/* Borítókép feltöltés */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="border p-2 rounded"
+          />
           {active.cover_image_url && (
-            <img src={`http://localhost:3001${active.cover_image_url}`} alt="Borító" className="w-32 h-auto" />
+            <img
+              src={`http://localhost:3001${active.cover_image_url}`}
+              alt="Borító"
+              className="w-32 h-auto"
+            />
           )}
+          {/* Hangfájl feltöltés */}
           <input
             type="file"
             accept="audio/*"
@@ -207,7 +239,10 @@ const handleAudioUpload = async (e) => {
             className="border p-2 rounded col-span-2"
           />
         </div>
-        <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+        <button
+          onClick={handleSave}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
           {editingAudiobook ? "Mentés" : "Hangoskönyv hozzáadása"}
         </button>
         {editingAudiobook && (
@@ -220,6 +255,7 @@ const handleAudioUpload = async (e) => {
         )}
       </div>
 
+      {/* Keresés */}
       <input
         type="text"
         placeholder="Keresés cím vagy szerző szerint..."
@@ -228,16 +264,26 @@ const handleAudioUpload = async (e) => {
         className="border px-3 py-2 rounded mb-6 w-full"
       />
 
+      {/* Lista */}
       <h2 className="text-xl font-semibold mb-4">Hangoskönyvek listája</h2>
       {filtered.map((book) => (
-        <div key={book.id} className="border p-4 rounded mb-4 flex justify-between items-start">
+        <div
+          key={book.id}
+          className="border p-4 rounded mb-4 flex justify-between items-start"
+        >
           <div>
             <h3 className="text-lg font-bold">{book.title}</h3>
             <p className="text-sm text-gray-600">Szerző: {book.author}</p>
             <p className="text-sm">Ár: {book.price} Ft</p>
-            <p className="text-sm text-gray-500">Narrátor: {book.narrator} | Hossz: {book.duration_minutes} perc</p>
+            <p className="text-sm text-gray-500">
+              Narrátor: {book.narrator} | Hossz: {book.duration_min} perc
+            </p>
             {book.cover_image_url && (
-              <img src={`http://localhost:3001${book.cover_image_url}`} alt="Borító" className="w-24 mt-2" />
+              <img
+                src={`http://localhost:3001${book.cover_image_url}`}
+                alt="Borító"
+                className="w-24 mt-2"
+              />
             )}
           </div>
           <div className="space-x-2">
