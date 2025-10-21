@@ -4,25 +4,25 @@ import {
   getBookById,
   createBook,
   updateBook,
-  deleteBook
+  deleteBook,
+  getRecommendedBooks
 } from "../controllers/bookController.js";
-import { authenticate, isAdmin } from "../middleware/authMiddleware.js";
+import { optionalAuthenticate, authenticate, isAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Összes könyv lekérése
+// FONTOS: a specifikus útvonalak menjenek a dinamikus (:id) ELÉ
+router.get("/recommended", optionalAuthenticate, getRecommendedBooks);
+
+// Összes könyv
 router.get("/", getAllBooks);
 
-// Egy könyv lekérése azonosító alapján
+// Egy könyv ID-ra
 router.get("/:id", getBookById);
 
-// Új könyv létrehozása (csak admin)
+// Adminos műveletek
 router.post("/", authenticate, isAdmin, createBook);
-
-// Könyv frissítése (csak admin)
 router.patch("/:id", authenticate, isAdmin, updateBook);
-
-// Könyv törlése (csak admin)
 router.delete("/:id", authenticate, isAdmin, deleteBook);
 
 export default router;

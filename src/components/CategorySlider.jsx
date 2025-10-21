@@ -3,8 +3,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const categories = [
-  "Regény", "Gyerek", "Életmód", "Tudomány",
-  "Történelem", "Fantasy", "Sci-fi"
+  "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
+  "Sci-fi", "Fantasy", "Életrajz", "Önfejlesztés", "Történelem",
+  "Gyermekkönyv", "Ifjúsági", "Thriller", "Üzleti",
+  "Egészség és életmód", "Utazás",
 ];
 
 export default function CategorySlider({ visibleCount = 3 }) {
@@ -13,7 +15,7 @@ export default function CategorySlider({ visibleCount = 3 }) {
 
   const prev = () => {
     setStartIndex((prevIndex) => (prevIndex - 1 + total) % total);
-  };
+  }; 
 
   const next = () => {
     setStartIndex((prevIndex) => (prevIndex + 1) % total);
@@ -35,14 +37,14 @@ export default function CategorySlider({ visibleCount = 3 }) {
 
       {/* Kategóriák */}
       {visibleCategories.map((cat, index) => (
-        <Link
-          to={`/category/${cat.toLowerCase()}`}
-          key={index}
-          className="w-40 sm:w-64 h-16 sm:h-24 bg-gray-200 hover:bg-yellow-200 rounded-2xl 
-                     text-lg font-semibold flex items-center justify-center transition-transform hover:scale-105"
-        >
-          {cat}
-        </Link>
+    <Link
+      to={`/books?category=${encodeURIComponent(cat)}`}
+      key={index}
+      className="w-40 sm:w-64 h-16 sm:h-24 bg-gray-200 hover:bg-yellow-200 rounded-2xl 
+                text-lg font-semibold flex items-center justify-center transition-transform hover:scale-105"
+    >
+      {cat}
+    </Link>
       ))}
 
       {/* Jobb nyíl */}

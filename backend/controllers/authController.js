@@ -13,9 +13,13 @@ export const registerUser = async (req, res) => {
   try {
     await pool.query(
       `
-      INSERT INTO users (id, firebase_uid, name, email)
-      VALUES (uuid_generate_v4(), $1, $2, $3)
-      ON CONFLICT (firebase_uid) DO NOTHING
+      INSERT INTO users (id, firebase_uid, name, email, role)
+      VALUES (uuid_generate_v4(), $1, $2, $3, 'customer')
+      ON CONFLICT (firebase_uid) 
+      DO UPDATE SET 
+        name = EXCLUDED.name,
+        email = EXCLUDED.email,
+        updated_at = NOW()
       `,
       [firebase_uid, name, email]
     );
@@ -26,3 +30,4 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ error: "Szerver hiba a regisztráció során." });
   }
 };
+

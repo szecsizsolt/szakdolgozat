@@ -22,7 +22,7 @@ export default function AdminDashboard() {
           Könyv kezelés
         </button>
         <button onClick={() => navigate("/admin/ebook")} className={buttonStyle}>
-          E-book kezelés
+          E-könyv kezelés
         </button>
         <button onClick={() => navigate("/admin/audio")} className={buttonStyle}>
           Hangoskönyv kezelés
@@ -35,12 +35,6 @@ export default function AdminDashboard() {
         </button>
         <button onClick={() => navigate("/admin/offers")} className={buttonStyle}>
           Akció kezelés
-        </button>
-        <button onClick={() => navigate("/admin/homepage")} className={buttonStyle}>
-          Főoldal kezelés
-        </button>
-        <button onClick={() => navigate("/admin/users")} className={buttonStyle}>
-          Felhasználók
         </button>
       </div>
     </div>

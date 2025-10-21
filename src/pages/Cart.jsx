@@ -88,7 +88,7 @@ export default function Cart() {
     const user = auth.currentUser;
     const token = await user.getIdToken();
 
-    const res = await fetch("http://localhost:3001/orders/orders", {
+    const res = await fetch("http://localhost:3001/orders", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -155,24 +155,28 @@ export default function Cart() {
                       {item.item_type === "physical" && "Hagyományos könyv"}
                     </p>
 
-                    {/* Mennyiség állítás */}
-                    <div className="flex items-center gap-2 mt-2">
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded text-sm font-bold"
-                      >
-                        <FaMinus size={10} />
-                      </button>
-                      <span className="px-2 text-sm font-medium text-gray-700">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded text-sm font-bold"
-                      >
-                        <FaPlus size={10} />
-                      </button>
-                    </div>
+                    {/* Mennyiség (csak fizikai könyveknél) */}
+                    {item.item_type === "physical" ? (
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded text-sm font-bold"
+                        >
+                          <FaMinus size={10} />
+                        </button>
+                        <span className="px-2 text-sm font-medium text-gray-700">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded text-sm font-bold"
+                        >
+                          <FaPlus size={10} />
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 mt-2 italic"></p>
+                    )}
                   </div>
                 </div>
 

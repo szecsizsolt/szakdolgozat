@@ -111,16 +111,20 @@ export default function AdminPage() {
   };
 
   // Könyv frissítése
-  const handleUpdateBook = async () => {
+    const handleUpdateBook = async () => {
     try {
       const token = await auth.currentUser.getIdToken();
-      const res = await fetch(`/api/books/${editingBook.id}`, {
+
+      // csak a frissíthető mezőket küldjük
+      const { id, ...dataToUpdate } = editingBook;
+
+      const res = await fetch(`/api/books/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(editingBook),
+        body: JSON.stringify(dataToUpdate),
       });
 
       if (!res.ok) throw new Error(await res.text());
@@ -134,6 +138,7 @@ export default function AdminPage() {
       alert("Nem sikerült frissíteni a könyvet.");
     }
   };
+
 
   // Könyv törlése
   const handleDelete = async (id) => {

@@ -62,15 +62,13 @@ export const placeOrder = async (req, res) => {
         [uuidv4(), orderId, item.book_id, item.quantity, item.price]
       );
 
-      // Csak digitális termékeket regisztráljunk user_purchases-be azonnal
-      if (item.item_type === "ebook" || item.item_type === "audiobook") {
+      // Minden terméket regisztráljunk a user_purchases táblába
         await client.query(
           `INSERT INTO user_purchases (id, user_id, book_id, item_type, order_id, purchased_at)
-           VALUES ($1, $2, $3, $4, $5, NOW())`,
+          VALUES ($1, $2, $3, $4, $5, NOW())`,
           [uuidv4(), userId, item.book_id, item.item_type, orderId]
         );
       }
-    }
 
     // Kosár ürítése
     await client.query("DELETE FROM cart_items WHERE user_id = $1", [userId]);
@@ -99,9 +97,9 @@ export const getAllOrders = async (_req, res) => {
         u.name AS user_name,
         u.email AS user_email,
         json_agg(
-          DISTINCT jsonb_build_object(
+          jsonb_build_object(
             'title', b.title,
-            'item_type', oi.item_type, -- jobb az order_items-ből venni
+            'item_type', b.type,          -- ✅ a books táblából jön!
             'quantity', oi.quantity,
             'price_each', oi.price_each
           )
@@ -116,7 +114,7 @@ export const getAllOrders = async (_req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error("Rendelések lekérdezése sikertelen:", err);
+    console.error("❌ Rendelések lekérdezése sikertelen:", err);
     res.status(500).json({ error: "Szerverhiba a lekérdezés során" });
   }
 };

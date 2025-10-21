@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import BookCard from "./BookCard";
 
 const CATEGORY_OPTIONS = [
-  "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus", "Sci-fi",
-  "Fantasy", "Életrajz", "Önfejlesztés", "Történelem", "Gyermekkönyv",
-  "Ifjúsági", "Thriller", "Üzleti", "Egészség és életmód", "Utazás"
+    "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
+  "Sci-fi", "Fantasy", "Életrajz", "Önfejlesztés", "Történelem",
+  "Gyermekkönyv", "Ifjúsági", "Thriller", "Üzleti",
+  "Egészség és életmód", "Utazás",
 ];
 
 export default function BookListGeneric({ apiUrl, title }) {

@@ -17,6 +17,8 @@ import ebookRoutes from './routes/ebookRoutes.js';
 import audiobookRoutes from './routes/audiobookRoutes.js';
 import userRoutes from "./routes/userRoutes.js";
 import uploadRoutes from "./routes/uploads.js";
+import blogRoutes from "./routes/blogRoutes.js";
+import reviewsRoutes from "./routes/reviewsRoutes.js";
 
 // __dirname kiszámítása ES Modules környezetben
 const __filename = fileURLToPath(import.meta.url);
@@ -65,7 +67,10 @@ app.use('/ebooks', ebookRoutes);
 app.use('/audiobooks', audiobookRoutes);
 app.use("/user", userRoutes);
 app.use("/api", uploadRoutes);
+app.use("/blog", blogRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/reviews", reviewsRoutes);
+
 
 // Teszt route
 app.get('/', (req, res) => {

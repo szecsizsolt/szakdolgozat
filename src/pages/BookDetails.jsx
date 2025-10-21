@@ -4,27 +4,26 @@ import { FaShoppingCart, FaStar, FaTrash } from "react-icons/fa";
 import { getAuth } from "firebase/auth";
 import { addToCartBackend } from "../utils/cart";
 
+const API_URL = "http://localhost:3001";
+
 export default function BookDetails() {
-  const { id } = useParams();
-  const [book, setBook] = useState(null);          // Könyv adat
-  const [rating, setRating] = useState(5);         // Új vélemény értékelés
-  const [comment, setComment] = useState("");      // Új vélemény szöveg
-  const [comments, setComments] = useState([       // Példa vélemények (később backendből is jöhetnek)
-    { rating: 5, text: "Nagyon jó könyv.", date: new Date() },
-    { rating: 1, text: "Nekem nem tetszett.", date: new Date() },
-  ]);
-  const [hasAccess, setHasAccess] = useState(false); // Vásárlás alapján olvashatóság
+  const { id } = useParams(); // Könyv UUID
+  const [book, setBook] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null); // 🔹 Bejelentkezett user ID
   const navigate = useNavigate();
   const auth = getAuth();
 
-  // Könyv részletek betöltése
+  // 🔹 Könyv betöltése
   useEffect(() => {
-    fetch(`http://localhost:3001/books/${id}`)
+    fetch(`${API_URL}/books/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        // Ha relatív a kép elérési út, egészítsük ki
         if (data.cover_image_url && !data.cover_image_url.startsWith("http")) {
-          data.cover_image_url = `http://localhost:3001${data.cover_image_url}`;
+          data.cover_image_url = `${API_URL}${data.cover_image_url}`;
         }
         setBook(data);
       })
@@ -34,7 +33,37 @@ export default function BookDetails() {
       });
   }, [id]);
 
-  // Ellenőrzés: a felhasználó megvásárolta-e az adott e-bookot vagy hangoskönyvet
+  // 🔹 Vélemények betöltése
+  useEffect(() => {
+    fetch(`${API_URL}/reviews/${id}`)
+      .then((res) => res.json())
+      .then((data) => setComments(data))
+      .catch((err) => console.error("Vélemény betöltési hiba:", err));
+  }, [id]);
+
+  // 🔹 Aktuális felhasználó ID lekérése
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUserId(data.id);
+        }
+      } catch (err) {
+        console.error("Felhasználó lekérési hiba:", err);
+      }
+    };
+
+    fetchUserId();
+  }, [auth]);
+
+  // 🔹 Vásárlás ellenőrzés
   useEffect(() => {
     const checkPurchase = async () => {
       try {
@@ -42,31 +71,25 @@ export default function BookDetails() {
         if (!user) return;
 
         const token = await user.getIdToken();
-
-        const res = await fetch("http://localhost:3001/user/purchases", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const res = await fetch(`${API_URL}/user/purchases`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         const data = await res.json();
-
         const hasPurchased = data.some(
           (item) =>
-            item.book_id === id &&
+            item.id === id &&
             (item.item_type === "ebook" || item.item_type === "audiobook")
         );
-
         setHasAccess(hasPurchased);
       } catch (err) {
         console.error("Vásárlás ellenőrzési hiba:", err);
       }
     };
-
     checkPurchase();
   }, [id, auth]);
 
-  // Olvasás gomb logika
+  // 🔹 Olvasás
   const handleRead = () => {
     if (book.type === "ebook") {
       navigate(`/ebook/${book.id}`);
@@ -75,25 +98,68 @@ export default function BookDetails() {
     }
   };
 
-  // Vélemény küldése
-  const handleSubmit = (e) => {
+  // 🔹 Vélemény beküldése
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (comment.trim() !== "") {
-      setComments([
-        ...comments,
-        { rating, text: comment, date: new Date() },
-      ]);
-      setComment("");
-      setRating(5);
+    if (comment.trim() === "") return;
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Be kell jelentkezned a véleményezéshez.");
+        return;
+      }
+
+      const token = await user.getIdToken();
+
+      const res = await fetch(`${API_URL}/reviews/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating, comment }),
+      });
+
+      if (res.ok) {
+        const updated = await fetch(`${API_URL}/reviews/${id}`).then((r) =>
+          r.json()
+        );
+        setComments(updated);
+        setComment("");
+        setRating(5);
+      } else {
+        const err = await res.json();
+        alert(err.error || "Hiba történt a mentéskor.");
+      }
+    } catch (err) {
+      console.error("Hiba a vélemény mentésekor:", err);
     }
   };
 
-  // Vélemény törlése
-  const handleDelete = (index) => {
-    setComments(comments.filter((_, i) => i !== index));
+  // 🔹 Vélemény törlése (csak saját)
+  const handleDelete = async (reviewId) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const token = await user.getIdToken();
+
+      const res = await fetch(`${API_URL}/reviews/${reviewId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        setComments(comments.filter((r) => r.id !== reviewId));
+      } else {
+        alert("Nem sikerült törölni a véleményt.");
+      }
+    } catch (err) {
+      console.error("Hiba a vélemény törlésekor:", err);
+    }
   };
 
-  // Kosárhoz adás
+  // 🔹 Kosárhoz adás
   const handleAddToCart = async () => {
     try {
       await addToCartBackend(book.id, 1, book.type);
@@ -104,14 +170,13 @@ export default function BookDetails() {
     }
   };
 
-  // Dátum formázás (véleményekhez)
-  const formatDate = (date) => {
-    return new Intl.DateTimeFormat("hu-HU", {
+  // 🔹 Dátum formázás
+  const formatDate = (date) =>
+    new Intl.DateTimeFormat("hu-HU", {
       year: "numeric",
       month: "long",
       day: "numeric",
     }).format(new Date(date));
-  };
 
   if (!book) {
     return <p className="text-center mt-10 text-gray-500">Könyv betöltése...</p>;
@@ -132,13 +197,15 @@ export default function BookDetails() {
           <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
             <p className="text-2xl font-bold text-gray-800">{book.price} Ft</p>
 
-            <button
-              onClick={handleAddToCart}
-              className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-5 py-2 rounded shadow"
-            >
-              <FaShoppingCart />
-              Kosárba
-            </button>
+            {!hasAccess && (
+              <button
+                onClick={handleAddToCart}
+                className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold px-5 py-2 rounded shadow"
+              >
+                <FaShoppingCart />
+                Kosárba
+              </button>
+            )}
 
             {(book.type === "ebook" || book.type === "audiobook") && (
               <button
@@ -164,19 +231,31 @@ export default function BookDetails() {
           </p>
           <p className="text-gray-600">
             Kiadó:{" "}
-            <span className="font-medium">{book.publisher || "Ismeretlen"}</span>
+            <span className="font-medium">
+              {book.publisher || "Ismeretlen"}
+            </span>
           </p>
           <p className="text-gray-600">
             Típus:{" "}
             <span className="font-medium">{book.type || "Ismeretlen"}</span>
           </p>
+          {/* Kategóriák */}
+            {book.categories && book.categories.length > 0 && (
+              <p className="text-gray-600">
+                Kategória:{" "}
+                <span className="font-medium">
+                  {book.categories.join(", ")}
+                </span>
+              </p>
+            )}
 
-          {/* Csillagos értékelés (átlag) */}
-          <div className="flex items-center gap-1 text-yellow-500 text-xl">
-            {[...Array(book.rating || 4)].map((_, i) => (
-              <FaStar key={i} />
-            ))}
-          </div>
+            {/* Átlagos értékelés */}
+            <p className="text-gray-600">
+              Átlagos értékelés:{" "}
+              <span className="font-semibold text-yellow-600">
+                {book.average_rating ? book.average_rating.toFixed(1) : "0.0"} ★
+              </span>
+            </p>
 
           <p className="text-sm leading-relaxed text-gray-800">
             {book.description || "Nincs leírás."}
@@ -225,18 +304,21 @@ export default function BookDetails() {
             Olvasói vélemények
           </h3>
           <div className="flex flex-col gap-6">
-            {comments.map((c, index) => (
+            {comments.map((c) => (
               <div
-                key={index}
+                key={c.id}
                 className="bg-[#fefae0] p-4 rounded-lg shadow-md border border-yellow-300 relative"
               >
-                <button
-                  onClick={() => handleDelete(index)}
-                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                  title="Törlés"
-                >
-                  <FaTrash />
-                </button>
+                {/* 🔒 Csak saját vélemény törölhető */}
+                {c.user_id === currentUserId && (
+                  <button
+                    onClick={() => handleDelete(c.id)}
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    title="Törlés"
+                  >
+                    <FaTrash />
+                  </button>
+                )}
 
                 <div className="flex items-center gap-1 mb-2 text-yellow-500">
                   {[...Array(c.rating)].map((_, i) => (
@@ -245,9 +327,12 @@ export default function BookDetails() {
                 </div>
 
                 <p className="text-xs text-gray-400 mb-1">
-                  {formatDate(c.date)}
+                  {formatDate(c.created_at)}
                 </p>
-                <p className="text-gray-700">{c.text}</p>
+                <p className="text-gray-700">{c.comment}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  – {c.display_name}
+                </p>
               </div>
             ))}
           </div>
