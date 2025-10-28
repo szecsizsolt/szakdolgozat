@@ -191,21 +191,22 @@ export const deleteBook = async (req, res) => {
 // =======================================================
 export const getRecommendedBooks = async (req, res) => {
   try {
-    // 🔹 User ID lekérdezése a Firebase UID alapján (mint a kosárnál)
     const firebaseUid = req.user?.uid || null;
-    const userId =  /*firebaseUid ? await getUserIdByFirebase(firebaseUid) : null;*/ "6f69156b-d658-4ce8-a9c7-b7588564d46a"
+    const userId = firebaseUid ? await getUserIdByFirebase(firebaseUid) : null; //
+      "7eae0ae4-c4a5-4a63-8fe5-4acc7a308222"; // teszt user
 
     let result;
 
     if (userId) {
-      // ✅ Személyre szabott ajánlás (kategóriák + értékelések alapján)
-      result = await pool.query(
-        `
+      // ✅ Kategória prioritás a darabszámokkal
+      result = await pool.query(`
         WITH category_counts AS (
           SELECT 
             UNNEST(b.categories) AS category,
-            COUNT(*) AS book_count
+            SUM(oi.quantity) AS total_quantity
           FROM user_purchases up
+          JOIN orders o ON o.id = up.order_id
+          JOIN order_items oi ON oi.order_id = o.id AND oi.book_id = up.book_id
           JOIN books b ON b.id = up.book_id
           WHERE up.user_id = $1
           GROUP BY category
@@ -222,18 +223,20 @@ export const getRecommendedBooks = async (req, res) => {
           b.*,
           COALESCE(rs.avg_rating, 0) AS avg_rating,
           COALESCE(rs.rating_count, 0) AS rating_count,
-          COALESCE(cc.book_count, 0) AS category_priority
+          COALESCE(cc.category_priority, 0) AS category_priority
         FROM books b
         LEFT JOIN review_stats rs ON rs.book_id = b.id
-        LEFT JOIN category_counts cc ON cc.category = ANY(b.categories)
+        LEFT JOIN LATERAL (
+          SELECT SUM(total_quantity) AS category_priority
+          FROM category_counts cc
+          WHERE cc.category = ANY(b.categories)
+        ) cc ON TRUE
         ORDER BY 
           category_priority DESC,
           avg_rating DESC,
           rating_count DESC,
           b.updated_at DESC;
-        `,
-        [userId]
-      );
+      `, [userId]);
     } else {
       // ⚙️ Vendég fallback – értékelések alapján
       result = await pool.query(`
@@ -264,3 +267,4 @@ export const getRecommendedBooks = async (req, res) => {
     res.status(500).json({ message: "Hiba a könyvajánló lekérdezésben" });
   }
 };
+

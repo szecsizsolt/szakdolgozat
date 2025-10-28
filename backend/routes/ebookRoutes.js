@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getEbooks,
+  getEbookById,
   createEbook,
   deleteEbook,
   updateEbook 
@@ -11,6 +12,9 @@ const router = express.Router();
 
 // E-könyvek lekérése
 router.get('/', getEbooks);
+
+// 📖 Egy konkrét e-könyv lekérése ID alapján
+router.get('/:id', getEbookById); 
 
 // Új e-könyv létrehozása (csak admin)
 router.post('/full', authenticate, isAdmin, createEbook);

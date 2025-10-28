@@ -56,19 +56,18 @@ app.post("/upload", upload.single("image"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "Nincs kép feltöltve" });
   res.json({ url: `/uploads/${req.file.filename}` });
 });
-app.use("/uploads", express.static(join(__dirname, 'uploads')));
 
 //  API route-ok
 app.use('/auth', authRoutes);
+app.use('/audiobooks', audiobookRoutes);
+app.use('/ebooks', ebookRoutes);
 app.use('/books', bookRoutes);
 app.use('/cart', cartRoutes);
 app.use('/orders', orderRoutes); // ⬅ Ez tartalmazza POST /orders és GET /admin/orders is!
-app.use('/ebooks', ebookRoutes);
-app.use('/audiobooks', audiobookRoutes);
 app.use("/user", userRoutes);
 app.use("/api", uploadRoutes);
 app.use("/blog", blogRoutes);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(join(__dirname, 'uploads')));
 app.use("/reviews", reviewsRoutes);
 
 
