@@ -1,31 +1,46 @@
-import { createContext, useState, useContext } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartCount, setCartCount] = useState(0);
 
-  const addToCart = (book) => {
-    const exists = cartItems.find((item) => item.id === book.id);
-    if (exists) {
-      alert('Ez a könyv már a kosárban van!');
-    } else {
-      setCartItems([...cartItems, { ...book, quantity: 1 }]);
-    }
-  };
+  // 🔁 Betöltés bejelentkezett userhez
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const token = await user.getIdToken();
+          const res = await fetch("http://localhost:3001/cart", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setCartCount(data.length);
+          } else {
+            setCartCount(0);
+          }
+        } catch (err) {
+          console.error("Kosár lekérési hiba:", err);
+          setCartCount(0);
+        }
+      } else {
+        setCartCount(0);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
-  const removeFromCart = (bookId) => {
-    setCartItems(cartItems.filter((item) => item.id !== bookId));
-  };
-
-  const clearCart = () => setCartItems([]);
+  const incrementCart = () => setCartCount((c) => c + 1);
+  const setCart = (count) => setCartCount(count);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart }}>
+    <CartContext.Provider value={{ cartCount, setCart, incrementCart }}>
       {children}
     </CartContext.Provider>
   );
 };
-
 
 export const useCart = () => useContext(CartContext);

@@ -268,3 +268,34 @@ export const getRecommendedBooks = async (req, res) => {
   }
 };
 
+
+// =======================================================
+// 🔍 Könyv keresés (cím vagy szerző alapján)
+// =======================================================
+export const searchBooks = async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.trim() === "") {
+    return res.json([]);
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `
+      SELECT id, title, author 
+      FROM books
+      WHERE LOWER(title) LIKE LOWER($1)
+         OR LOWER(author) LIKE LOWER($1)
+      ORDER BY title ASC
+      LIMIT 5
+      `,
+      [`%${q}%`]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ searchBooks hiba:", err);
+    res.status(500).json({ error: "Szerverhiba a keresés során." });
+  }
+};
+
+

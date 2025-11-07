@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import BookCard from "./BookCard";
 
 const CATEGORY_OPTIONS = [
-    "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
+  "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
   "Sci-fi", "Fantasy", "Életrajz", "Önfejlesztés", "Történelem",
   "Gyermekkönyv", "Ifjúsági", "Thriller", "Üzleti",
   "Egészség és életmód", "Utazás",
@@ -15,7 +16,20 @@ export default function BookListGeneric({ apiUrl, title }) {
   const [search, setSearch] = useState("");
   const [error, setError] = useState(null);
 
-  // Könyvek betöltése API-ról
+  const location = useLocation();
+
+  // 📌 Lekérjük az URL query paramétert (pl. ?category=Krimi)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const categoryParam = params.get("category");
+    if (categoryParam && CATEGORY_OPTIONS.includes(categoryParam)) {
+      setSelectedCategory(categoryParam);
+    } else {
+      setSelectedCategory("Összes");
+    }
+  }, [location.search]);
+
+  // 📚 Könyvek betöltése API-ról
   useEffect(() => {
     fetch(apiUrl)
       .then((res) => {
@@ -38,7 +52,7 @@ export default function BookListGeneric({ apiUrl, title }) {
       });
   }, [apiUrl]);
 
-  // Szűrés kategória és keresés alapján
+  // 🔍 Szűrés kategória és keresés alapján
   const filteredBooks = books.filter((book) => {
     const matchesCategory =
       selectedCategory === "Összes" || book.categories?.includes(selectedCategory);
@@ -48,7 +62,7 @@ export default function BookListGeneric({ apiUrl, title }) {
     return matchesCategory && matchesSearch;
   });
 
-  // Rendezés
+  // 🔽 Rendezés
   const sortedBooks = [...filteredBooks].sort((a, b) => {
     switch (sortBy) {
       case "price-asc":
@@ -68,7 +82,7 @@ export default function BookListGeneric({ apiUrl, title }) {
     <div className="max-w-7xl mx-auto px-4 py-6">
       <h1 className="text-3xl font-bold mb-6 text-green-800">{title}</h1>
 
-      {/* Keresőmező */}
+      {/* 🔍 Keresőmező */}
       <div className="mb-4">
         <input
           type="text"
@@ -79,7 +93,7 @@ export default function BookListGeneric({ apiUrl, title }) {
         />
       </div>
 
-      {/* Kategória szűrés */}
+      {/* 🟢 Kategória szűrés */}
       <div className="flex flex-wrap gap-3 mb-6">
         <button
           onClick={() => setSelectedCategory("Összes")}
@@ -106,7 +120,7 @@ export default function BookListGeneric({ apiUrl, title }) {
         ))}
       </div>
 
-      {/* Rendezés */}
+      {/* 📏 Rendezés */}
       <div className="mb-6">
         <label htmlFor="sort" className="font-medium text-green-800 mr-2">
           Rendezés:
@@ -124,10 +138,10 @@ export default function BookListGeneric({ apiUrl, title }) {
         </select>
       </div>
 
-      {/* Hibaüzenet */}
+      {/* 🚨 Hibaüzenet */}
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
-      {/* Könyvek listája */}
+      {/* 📚 Könyvek listája */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {sortedBooks.map((book) => (
           <BookCard key={book.id} book={book} />

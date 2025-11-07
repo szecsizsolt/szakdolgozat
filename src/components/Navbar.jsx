@@ -4,11 +4,14 @@ import { FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
 import { auth, db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { useCart } from "../context/CartContext";
+
 
 export default function Navbar() {
   const [hover, setHover] = useState(false);
   const [userData, setUserData] = useState(null);
   const [cartItems, setCartItems] = useState([]);
+  const { cartCount } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Hitelesítés és kosár betöltése
@@ -99,55 +102,12 @@ export default function Navbar() {
                   className="relative inline-flex items-center bg-white border border-yellow-500 text-olive-800 p-2 rounded shadow hover:bg-yellow-100 cursor-pointer"
                 >
                   <FaShoppingCart size={18} />
-                  {cartItems.length > 0 && (
+                  {cartCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                      {cartItems.length}
+                      {cartCount}
                     </span>
                   )}
                 </Link>
-
-                {/* Kosár előnézet */}
-                {hover && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-300 rounded-xl shadow-lg p-4 text-sm text-olive-800 z-50">
-                    <h3 className="font-semibold mb-2">Kosár</h3>
-                    {cartItems.length === 0 ? (
-                      <p className="text-gray-500">A kosarad üres</p>
-                    ) : (
-                      <>
-                        <ul className="space-y-2 max-h-60 overflow-y-auto">
-                          {cartItems.map((item, idx) => (
-                            <li
-                              key={idx}
-                              className="flex justify-between items-center border-b pb-1"
-                            >
-                              <div className="flex items-center gap-2">
-                                {item.cover_image_url && (
-                                  <img
-                                    src={item.cover_image_url}
-                                    alt={item.title}
-                                    className="w-8 h-12 object-cover rounded"
-                                  />
-                                )}
-                                <span>{item.title} × {item.quantity}</span>
-                              </div>
-                              <span>{(item.price * item.quantity).toLocaleString()} Ft</span>
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="mt-3 flex justify-between font-semibold">
-                          <span>Összesen:</span>
-                          <span>{total.toLocaleString()} Ft</span>
-                        </div>
-                        <Link
-                          to="/cart"
-                          className="block mt-3 w-full text-center bg-yellow-400 hover:bg-yellow-500 py-1.5 rounded font-bold"
-                        >
-                          Kosár megnyitása
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Profil */}

@@ -33,7 +33,7 @@ export default function AdminDashboard() {
         <button onClick={() => navigate("/admin/blog")} className={buttonStyle}>
           Blog kezelés
         </button>
-        <button onClick={() => navigate("/admin/offers")} className={buttonStyle}>
+        <button onClick={() => navigate("/admin/discounts")} className={buttonStyle}>
           Akció kezelés
         </button>
       </div>

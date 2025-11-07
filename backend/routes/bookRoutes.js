@@ -5,22 +5,26 @@ import {
   createBook,
   updateBook,
   deleteBook,
-  getRecommendedBooks
+  getRecommendedBooks,
+  searchBooks
 } from "../controllers/bookController.js";
 import { optionalAuthenticate, authenticate, isAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// FONTOS: a specifikus útvonalak menjenek a dinamikus (:id) ELÉ
+// ⚡ FONTOS: mindig a speciális route-ok legyenek elöl!
 router.get("/recommended", optionalAuthenticate, getRecommendedBooks);
 
-// Összes könyv
+// 🔍 Keresés
+router.get("/search", searchBooks);
+
+// 📚 Összes könyv
 router.get("/", getAllBooks);
 
-// Egy könyv ID-ra
+// 📘 Egy könyv ID alapján
 router.get("/:id", getBookById);
 
-// Adminos műveletek
+// 🔐 Admin műveletek
 router.post("/", authenticate, isAdmin, createBook);
 router.patch("/:id", authenticate, isAdmin, updateBook);
 router.delete("/:id", authenticate, isAdmin, deleteBook);

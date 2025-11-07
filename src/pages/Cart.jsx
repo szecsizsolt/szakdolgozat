@@ -2,32 +2,79 @@ import { useEffect, useState } from "react";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { getAuth } from "firebase/auth";
+import { useCart } from "../context/CartContext";
 
 export default function Cart() {
   const [cartItems, setCartItems] = useState([]); // Kosár tartalma
   const auth = getAuth();
+  const { setCart } = useCart(); // 🔥 Navbar számláló frissítése
 
   // Kosár lekérése a backendtől
   const fetchCart = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
-    const token = await user.getIdToken();
-    const res = await fetch("http://localhost:3001/cart", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("http://localhost:3001/cart", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const data = await res.json();
-    setCartItems(
-      data.map((item) => ({
-        ...item,
-        cover_image_url: item.cover_image_url?.startsWith("http")
-          ? item.cover_image_url
-          : `http://localhost:3001${item.cover_image_url}`,
-      }))
-    );
+      if (!res.ok) {
+        setCartItems([]);
+        setCart(0);
+        return;
+      }
+
+      const data = await res.json();
+
+      // Könyv képek és akciós árak betöltése
+      const withImagesAndDiscounts = await Promise.all(
+        data.map(async (item) => {
+          let finalPrice = item.price;
+          let discountValue = null;
+
+          try {
+            const discountRes = await fetch(
+              `http://localhost:3001/api/discounts/book/${item.book_id}`
+            );
+            if (discountRes.ok) {
+              const discountData = await discountRes.json();
+              if (discountData?.value) {
+                discountValue = discountData.value;
+                finalPrice = Math.round(item.price * (1 - discountValue / 100));
+              }
+            }
+          } catch (err) {
+            console.error("⚠️ Akció lekérdezési hiba:", err);
+          }
+
+          return {
+            ...item,
+            cover_image_url: item.cover_image_url?.startsWith("http")
+              ? item.cover_image_url
+              : `http://localhost:3001${item.cover_image_url}`,
+            final_price: finalPrice,
+            discount: discountValue,
+          };
+        })
+      );
+
+      setCartItems(withImagesAndDiscounts);
+
+      // 🔹 Számláló — összes darabszám
+      const totalItems = withImagesAndDiscounts.reduce(
+        (sum, i) => sum + i.quantity,
+        0
+      );
+      setCart(totalItems);
+    } catch (err) {
+      console.error("⚠️ Kosár lekérési hiba:", err);
+      setCartItems([]);
+      setCart(0);
+    }
   };
 
   useEffect(() => {
@@ -38,75 +85,88 @@ export default function Cart() {
   const updateQuantity = async (id, newQuantity) => {
     if (newQuantity < 1) return;
 
-    const user = auth.currentUser;
-    const token = await user.getIdToken();
+    try {
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
 
-    await fetch(`http://localhost:3001/cart/${id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ quantity: newQuantity }),
-    });
+      await fetch(`http://localhost:3001/cart/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
 
-    fetchCart();
+      fetchCart(); // 🔄 frissítés
+    } catch (err) {
+      console.error("⚠️ Mennyiség frissítési hiba:", err);
+    }
   };
 
   // Elem eltávolítása a kosárból
   const removeFromCart = async (id) => {
-    const user = auth.currentUser;
-    const token = await user.getIdToken();
+    try {
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
 
-    await fetch(`http://localhost:3001/cart/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      await fetch(`http://localhost:3001/cart/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    fetchCart();
+      fetchCart(); // 🔄 frissítés
+    } catch (err) {
+      console.error("⚠️ Eltávolítási hiba:", err);
+    }
   };
 
   // Kosár teljes törlése
   const clearCart = async () => {
-    const user = auth.currentUser;
-    const token = await user.getIdToken();
+    try {
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
 
-    await fetch("http://localhost:3001/cart", {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      await fetch("http://localhost:3001/cart", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    fetchCart();
+      setCart(0);
+      fetchCart();
+    } catch (err) {
+      console.error("⚠️ Kosár törlési hiba:", err);
+    }
   };
 
   // Megrendelés leadása
   const handleCheckout = async () => {
-    const user = auth.currentUser;
-    const token = await user.getIdToken();
+    try {
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
 
-    const res = await fetch("http://localhost:3001/orders", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const res = await fetch("http://localhost:3001/orders", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (res.ok) {
-      alert("Rendelés sikeresen leadva!");
-      fetchCart();
-    } else {
-      const err = await res.json();
-      alert("Hiba a rendelés során: " + err.error);
+      if (res.ok) {
+        alert("Rendelés sikeresen leadva!");
+        setCart(0); // 🔥 számláló azonnal nulláz
+        fetchCart();
+      } else {
+        const err = await res.json();
+        alert("Hiba a rendelés során: " + err.error);
+      }
+    } catch (err) {
+      console.error("⚠️ Fizetési hiba:", err);
+      alert("Hiba a rendelés során!");
     }
   };
 
-  // Összesítés
+  // 💰 Összesítés akciós árakkal
   const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + (item.final_price ?? item.price) * item.quantity,
     0
   );
 
@@ -159,7 +219,9 @@ export default function Cart() {
                     {item.item_type === "physical" ? (
                       <div className="flex items-center gap-2 mt-2">
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
                           className="px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded text-sm font-bold"
                         >
                           <FaMinus size={10} />
@@ -168,7 +230,9 @@ export default function Cart() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
                           className="px-2 py-1 bg-yellow-300 hover:bg-yellow-400 rounded text-sm font-bold"
                         >
                           <FaPlus size={10} />
@@ -182,9 +246,24 @@ export default function Cart() {
 
                 {/* Ár és eltávolítás */}
                 <div className="flex flex-col items-end justify-between h-full gap-4">
-                  <p className="text-md font-semibold text-gray-800">
-                    {item.price * item.quantity} Ft
-                  </p>
+                  {item.discount ? (
+                    <>
+                      <p className="text-sm text-gray-500 line-through">
+                        {(item.price * item.quantity).toLocaleString()} Ft
+                      </p>
+                      <p className="text-md font-semibold text-red-600">
+                        {(item.final_price * item.quantity).toLocaleString()} Ft{" "}
+                        <span className="text-xs text-red-500 font-semibold">
+                          (−{item.discount}%)
+                        </span>
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-md font-semibold text-gray-800">
+                      {(item.price * item.quantity).toLocaleString()} Ft
+                    </p>
+                  )}
+
                   <button
                     onClick={() => removeFromCart(item.id)}
                     className="text-red-600 hover:text-red-700"

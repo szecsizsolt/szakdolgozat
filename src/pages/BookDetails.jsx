@@ -3,19 +3,24 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaShoppingCart, FaStar, FaTrash } from "react-icons/fa";
 import { getAuth } from "firebase/auth";
 import { addToCartBackend } from "../utils/cart";
+import { useCart } from "../context/CartContext";
+
 
 const API_URL = "http://localhost:3001";
 
 export default function BookDetails() {
-  const { id } = useParams(); // Könyv UUID
+  const { id } = useParams();
   const [book, setBook] = useState(null);
+  const [discount, setDiscount] = useState(null); // 🔹 akció adatok
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
   const [hasAccess, setHasAccess] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState(null); // 🔹 Bejelentkezett user ID
+  const [currentUserId, setCurrentUserId] = useState(null);
   const navigate = useNavigate();
   const auth = getAuth();
+  const { incrementCart } = useCart();
+
 
   // 🔹 Könyv betöltése
   useEffect(() => {
@@ -32,6 +37,18 @@ export default function BookDetails() {
         alert("Nem sikerült betölteni a könyv adatokat.");
       });
   }, [id]);
+
+  // 🔹 Akció lekérése
+  useEffect(() => {
+    if (!book) return;
+    fetch(`${API_URL}/api/discounts/book/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Nincs akció");
+        return res.json();
+      })
+      .then((data) => setDiscount(data))
+      .catch(() => setDiscount(null));
+  }, [book, id]);
 
   // 🔹 Vélemények betöltése
   useEffect(() => {
@@ -59,7 +76,6 @@ export default function BookDetails() {
         console.error("Felhasználó lekérési hiba:", err);
       }
     };
-
     fetchUserId();
   }, [auth]);
 
@@ -69,12 +85,10 @@ export default function BookDetails() {
       try {
         const user = auth.currentUser;
         if (!user) return;
-
         const token = await user.getIdToken();
         const res = await fetch(`${API_URL}/user/purchases`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await res.json();
         const hasPurchased = data.some(
           (item) =>
@@ -163,12 +177,19 @@ export default function BookDetails() {
   const handleAddToCart = async () => {
     try {
       await addToCartBackend(book.id, 1, book.type);
+      incrementCart(); // 🔥 frissíti a Navbar számlálót
       alert("Kosárba helyezve!");
     } catch (err) {
       console.error("Kosárba helyezési hiba:", err);
       alert("Hiba: " + err.message);
     }
   };
+
+  // 🔹 Akciós ár kiszámítása
+  const discountedPrice =
+    discount && discount.value
+      ? Math.round(book.price * (1 - discount.value / 100))
+      : null;
 
   // 🔹 Dátum formázás
   const formatDate = (date) =>
@@ -185,7 +206,7 @@ export default function BookDetails() {
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-10 space-y-10">
       {/* Könyv adatok blokk */}
-      <div className="flex flex-col md:flex-row gap-10 items-start">
+      <div className="flex flex-col md:flex-row gap-10 items-start relative">
         <img
           src={book.cover_image_url || "/placeholder.png"}
           alt={book.title}
@@ -195,8 +216,24 @@ export default function BookDetails() {
         <div className="flex-1 space-y-4 relative w-full">
           {/* Jobb felső sarok: ár, kosár, olvasás gomb */}
           <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
-            <p className="text-2xl font-bold text-gray-800">{book.price} Ft</p>
+            {/* 🔹 Akció csak ha NEM megvett könyv */}
+            {!hasAccess && discount ? (
+              <>
+                <p className="text-lg text-gray-500 line-through">
+                  {book.price} Ft
+                </p>
+                <p className="text-2xl font-bold text-green-700">
+                  {discountedPrice} Ft{" "}
+                  <span className="text-red-600 text-sm font-semibold">
+                    (−{discount.value}%)
+                  </span>
+                </p>
+              </>
+            ) : (
+              <p className="text-2xl font-bold text-gray-800">{book.price} Ft</p>
+            )}
 
+            {/* 🔹 Kosár gomb */}
             {!hasAccess && (
               <button
                 onClick={handleAddToCart}
@@ -207,6 +244,14 @@ export default function BookDetails() {
               </button>
             )}
 
+            {/* 🔹 Akció címke csak ha nem megvett könyv */}
+            {discount && !hasAccess && (
+              <div className="mt-1 bg-red-600 text-white font-bold text-sm px-3 py-1 rounded-full shadow flex items-center gap-1">
+                 Akció
+              </div>
+            )}
+
+            {/* 🔹 Olvasás gomb digitális könyveknél */}
             {(book.type === "ebook" || book.type === "audiobook") && (
               <button
                 onClick={handleRead}
@@ -230,43 +275,32 @@ export default function BookDetails() {
             <span className="font-semibold">{book.author || "Ismeretlen"}</span>
           </p>
           <p className="text-gray-600">
-            Kiadó:{" "}
-            <span className="font-medium">
-              {book.publisher || "Ismeretlen"}
-            </span>
+            Kiadó: <span className="font-medium">{book.publisher}</span>
           </p>
           <p className="text-gray-600">
-            Típus:{" "}
-            <span className="font-medium">{book.type || "Ismeretlen"}</span>
+            Típus: <span className="font-medium">{book.type}</span>
           </p>
-          {/* Kategóriák */}
-            {book.categories && book.categories.length > 0 && (
-              <p className="text-gray-600">
-                Kategória:{" "}
-                <span className="font-medium">
-                  {book.categories.join(", ")}
-                </span>
-              </p>
-            )}
-
-            {/* Átlagos értékelés */}
+          {book.categories?.length > 0 && (
             <p className="text-gray-600">
-              Átlagos értékelés:{" "}
-              <span className="font-semibold text-yellow-600">
-                {book.average_rating ? book.average_rating.toFixed(1) : "0.0"} ★
-              </span>
+              Kategória:{" "}
+              <span className="font-medium">{book.categories.join(", ")}</span>
             </p>
-
+          )}
+          <p className="text-gray-600">
+            Átlagos értékelés:{" "}
+            <span className="font-semibold text-yellow-600">
+              {book.average_rating ? book.average_rating.toFixed(1) : "0.0"} ★
+            </span>
+          </p>
           <p className="text-sm leading-relaxed text-gray-800">
             {book.description || "Nincs leírás."}
           </p>
         </div>
       </div>
 
-      {/* Új vélemény beküldése */}
+      {/* Vélemények és értékelés */}
       <section className="space-y-4">
         <h2 className="text-xl font-bold text-green-900">Értékelés</h2>
-
         <div className="flex items-center gap-1 text-yellow-500 text-2xl">
           {[...Array(5)].map((_, i) => (
             <button
@@ -297,7 +331,6 @@ export default function BookDetails() {
         </form>
       </section>
 
-      {/* Vélemények listázása */}
       {comments.length > 0 && (
         <section className="space-y-6 mt-10">
           <h3 className="text-xl font-bold text-green-900">
@@ -309,7 +342,6 @@ export default function BookDetails() {
                 key={c.id}
                 className="bg-[#fefae0] p-4 rounded-lg shadow-md border border-yellow-300 relative"
               >
-                {/* 🔒 Csak saját vélemény törölhető */}
                 {c.user_id === currentUserId && (
                   <button
                     onClick={() => handleDelete(c.id)}
@@ -319,20 +351,16 @@ export default function BookDetails() {
                     <FaTrash />
                   </button>
                 )}
-
                 <div className="flex items-center gap-1 mb-2 text-yellow-500">
                   {[...Array(c.rating)].map((_, i) => (
                     <FaStar key={i} />
                   ))}
                 </div>
-
                 <p className="text-xs text-gray-400 mb-1">
                   {formatDate(c.created_at)}
                 </p>
                 <p className="text-gray-700">{c.comment}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  – {c.display_name}
-                </p>
+                <p className="text-xs text-gray-500 mt-1">– {c.display_name}</p>
               </div>
             ))}
           </div>

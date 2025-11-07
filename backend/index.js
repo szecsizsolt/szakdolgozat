@@ -19,6 +19,7 @@ import userRoutes from "./routes/userRoutes.js";
 import uploadRoutes from "./routes/uploads.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import reviewsRoutes from "./routes/reviewsRoutes.js";
+import discountRoutes from "./routes/discountRoutes.js";
 
 // __dirname kiszámítása ES Modules környezetben
 const __filename = fileURLToPath(import.meta.url);
@@ -69,6 +70,7 @@ app.use("/api", uploadRoutes);
 app.use("/blog", blogRoutes);
 app.use("/uploads", express.static(join(__dirname, 'uploads')));
 app.use("/reviews", reviewsRoutes);
+app.use("/api/discounts", discountRoutes);
 
 
 // Teszt route

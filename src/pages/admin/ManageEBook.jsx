@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { auth } from "../../firebase";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
 // Kategória opciók
 const CATEGORY_OPTIONS = [
   "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
@@ -103,11 +105,18 @@ export default function EbookAdminPage() {
     }
   };
 
-  // Mentés (új vagy meglévő frissítése)
+    // Mentés (új vagy meglévő frissítése)
   const handleSave = async () => {
     const token = await auth.currentUser.getIdToken();
-    const method = editingEbook ? "PATCH" : "POST";
-    const endpoint = editingEbook ? `/api/ebooks/${editingEbook.id}` : "/api/ebooks/full";
+    const isEdit = Boolean(editingEbook);
+    const method = isEdit ? "PATCH" : "POST";
+
+    // ⚙️ FONTOS: ha szerkesztünk, akkor az ebook_id kell (nem a books.id)
+    const targetId = editingEbook?.ebook_id || editingEbook?.id;
+
+    const endpoint = isEdit
+      ? `${API_URL}/ebooks/${targetId}`
+      : `${API_URL}/ebooks/full`;
 
     try {
       const res = await fetch(endpoint, {
@@ -118,37 +127,57 @@ export default function EbookAdminPage() {
         },
         body: JSON.stringify(active),
       });
-      if (!res.ok) throw new Error(await res.text());
 
+      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      if (editingEbook) {
-        setEbooks(ebooks.map((b) => (b.id === data.id ? data : b)));
+
+      if (isEdit) {
+        // Frissítés a listában
+        setEbooks((prev) =>
+          prev.map((b) =>
+            b.id === data.id || b.ebook_id === data.ebook_id ? data : b
+          )
+        );
         setEditingEbook(null);
       } else {
-        setEbooks([...ebooks, data]);
+        // Új e-könyv
+        setEbooks((prev) => [...prev, data]);
         setNewEbook({ stock: 0 });
       }
-      alert("Mentés sikeres");
+
+      alert("✅ Mentés sikeres!");
     } catch (err) {
       console.error("Mentés hiba:", err);
-      alert("Nem sikerült menteni az e-könyvet.");
+      alert("❌ Nem sikerült menteni az e-könyvet.");
     }
   };
 
   // Törlés
   const handleDelete = async (id) => {
     const token = await auth.currentUser.getIdToken();
+
+    // A backend az ebooks.id-t várja, nem a books.id-t
+    const target = ebooks.find((b) => b.id === id || b.ebook_id === id);
+    const targetId = target?.ebook_id || id;
+
     try {
-      const res = await fetch(`/api/ebooks/${id}`, {
+      const res = await fetch(`${API_URL}/ebooks/${targetId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!res.ok) throw new Error("Törlés sikertelen");
-      setEbooks(ebooks.filter((b) => b.id !== id));
+
+      setEbooks((prev) =>
+        prev.filter((b) => b.id !== id && b.ebook_id !== id)
+      );
+      alert("🗑️ E-könyv törölve!");
     } catch (err) {
       console.error("Törlés hiba:", err);
+      alert("❌ Nem sikerült törölni az e-könyvet.");
     }
   };
+
 
   // Keresés szűrés
   const filtered = ebooks.filter((e) =>
@@ -293,7 +322,12 @@ export default function EbookAdminPage() {
           </div>
           <div className="space-x-2">
             <button
-              onClick={() => setEditingEbook(book)}
+              onClick={() =>
+                setEditingEbook({
+                  ...book,
+                  id: book.ebook_id || book.id, // mindig az ebooks.id menjen szerkesztésre
+                })
+              }
               className="border border-gray-300 px-3 py-1 rounded hover:bg-gray-100"
             >
               Módosítás

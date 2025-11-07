@@ -54,7 +54,7 @@ export default function Register() {
       });
 
       alert("Sikeres regisztráció!");
-      navigate("/login");
+      navigate("/");
     } catch (error) {
       console.error("Regisztrációs hiba:", error);
       alert("Hiba történt: " + error.message);

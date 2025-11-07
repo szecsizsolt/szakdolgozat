@@ -27,6 +27,7 @@ import AudiobookList from "./pages/AudioBookList";
 import MyDigitalBooks from "./pages/MyDigitalBooks";
 import ManageBlog from "./pages/admin/ManageBlog";
 import ManageHomePage from "./pages/admin/ManageHomePage";
+import DiscountManager from "./pages/admin/DiscountManager";
 
 
 
@@ -56,6 +57,7 @@ function App() {
             <Route path="/admin/orders" element={<AdminRoute><Orders /></AdminRoute>} />
             <Route path="/admin/blog" element={<AdminRoute><ManageBlog /></AdminRoute>}/>
             <Route path="/admin/homepage" element={<AdminRoute><ManageHomePage /></AdminRoute>}/>
+            <Route path="/admin/discounts" element={<AdminRoute><DiscountManager /></AdminRoute>}/>
             <Route path="/profile" element={<Profile />} />
             <Route path="/book/:id" element={<BookDetails />} />
             <Route path="/books" element={<BookList />} />

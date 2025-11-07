@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { auth } from "../../firebase";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
 const CATEGORY_OPTIONS = [
   "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
   "Sci-fi", "Fantasy", "Életrajz", "Önfejlesztés", "Történelem",
@@ -104,57 +106,80 @@ export default function AudiobookAdminPage() {
   };
 
   // Mentés (új vagy meglévő módosítása)
-  const handleSave = async () => {
-    const token = await auth.currentUser.getIdToken();
-    const method = editingAudiobook ? "PATCH" : "POST";
-    const endpoint = editingAudiobook
-      ? `/api/audiobooks/${editingAudiobook.id}`
-      : "/api/audiobooks/full";
+const handleSave = async () => {
+  const token = await auth.currentUser.getIdToken();
 
-    try {
-      const res = await fetch(endpoint, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(active),
-      });
+  // Ha szerkesztünk → PATCH, egyébként POST
+  const isEdit = Boolean(editingAudiobook);
+  const method = isEdit ? "PATCH" : "POST";
 
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
+  // Ha szerkesztünk, az audiobooks.id-t kell küldeni, nem a books.id-t!
+  const targetId = editingAudiobook?.audiobook_id || editingAudiobook?.id;
 
-      if (editingAudiobook) {
-        // Frissítés a listában
-        setAudiobooks(audiobooks.map((b) => (b.id === data.id ? data : b)));
-        setEditingAudiobook(null);
-      } else {
-        // Új hozzáadás
-        setAudiobooks([...audiobooks, data]);
-        setNewAudiobook({ stock: 0 });
-      }
+  const endpoint = isEdit
+  ? `${API_URL}/audiobooks/${targetId}`
+  : `${API_URL}/audiobooks/full`;
 
-      alert("Mentés sikeres");
-    } catch (err) {
-      console.error("Mentés hiba:", err);
-      alert("Nem sikerült menteni a hangoskönyvet.");
+  try {
+    const res = await fetch(endpoint, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(active),
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+
+    if (isEdit) {
+      // Frissítés a listában
+      setAudiobooks((prev) =>
+        prev.map((b) =>
+          b.id === data.id || b.audiobook_id === data.audiobook_id ? data : b
+        )
+      );
+      setEditingAudiobook(null);
+    } else {
+      // Új elem hozzáadása
+      setAudiobooks((prev) => [...prev, data]);
+      setNewAudiobook({ stock: 0 });
     }
-  };
 
-  // Törlés
-  const handleDelete = async (id) => {
-    const token = await auth.currentUser.getIdToken();
-    try {
-      const res = await fetch(`/api/audiobooks/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Törlés sikertelen");
-      setAudiobooks(audiobooks.filter((b) => b.id !== id));
-    } catch (err) {
-      console.error("Törlés hiba:", err);
-    }
-  };
+    alert("✅ Mentés sikeres!");
+  } catch (err) {
+    console.error("Mentés hiba:", err);
+    alert("❌ Nem sikerült menteni a hangoskönyvet.");
+  }
+};
+
+// Törlés
+const handleDelete = async (id) => {
+  const token = await auth.currentUser.getIdToken();
+
+  // Ha a listában book.id van, a backendnek az audiobook_id kell
+  const target = audiobooks.find((b) => b.id === id || b.audiobook_id === id);
+  const targetId = target?.audiobook_id || id;
+
+  try {
+    const res = await fetch(`${API_URL}/audiobooks/${targetId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Törlés sikertelen");
+
+    setAudiobooks((prev) =>
+      prev.filter((b) => b.id !== id && b.audiobook_id !== id)
+    );
+    alert("🗑️ Hangoskönyv törölve!");
+  } catch (err) {
+    console.error("Törlés hiba:", err);
+    alert("❌ Nem sikerült törölni a hangoskönyvet.");
+  }
+};
+
 
   // Keresési szűrés
   const filtered = audiobooks.filter(
@@ -288,7 +313,12 @@ export default function AudiobookAdminPage() {
           </div>
           <div className="space-x-2">
             <button
-              onClick={() => setEditingAudiobook(book)}
+              onClick={() =>
+                setEditingAudiobook({
+                  ...book,
+                  id: book.audiobook_id || book.id, // mindig az audiobooks.id-t használjuk
+                })
+              }
               className="border border-gray-300 px-3 py-1 rounded hover:bg-gray-100"
             >
               Módosítás
