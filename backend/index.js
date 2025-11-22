@@ -20,6 +20,8 @@ import uploadRoutes from "./routes/uploads.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import reviewsRoutes from "./routes/reviewsRoutes.js";
 import discountRoutes from "./routes/discountRoutes.js";
+import simplePayRoutes from "./routes/simplepay.js";
+import simplePayMockRoutes from "./routes/simplepayMock.js";
 
 // __dirname kiszámítása ES Modules környezetben
 const __filename = fileURLToPath(import.meta.url);
@@ -40,6 +42,7 @@ admin.initializeApp({
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // <-- EZ KELL A FORM ADATHOZ
 
 //  Feltöltés beállítása
 const storage = multer.diskStorage({
@@ -58,6 +61,7 @@ app.post("/upload", upload.single("image"), (req, res) => {
   res.json({ url: `/uploads/${req.file.filename}` });
 });
 
+
 //  API route-ok
 app.use('/auth', authRoutes);
 app.use('/audiobooks', audiobookRoutes);
@@ -71,6 +75,8 @@ app.use("/blog", blogRoutes);
 app.use("/uploads", express.static(join(__dirname, 'uploads')));
 app.use("/reviews", reviewsRoutes);
 app.use("/api/discounts", discountRoutes);
+app.use("/simplepay", simplePayRoutes);
+app.use("/simplepay", simplePayMockRoutes);
 
 
 // Teszt route

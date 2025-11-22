@@ -140,29 +140,41 @@ export default function Cart() {
   };
 
   // Megrendelés leadása
-  const handleCheckout = async () => {
-    try {
-      const user = auth.currentUser;
-      const token = await user.getIdToken();
+const handleCheckoutSimplePay = async () => {
+  const user = auth.currentUser;
+  const token = await user.getIdToken();
 
-      const res = await fetch("http://localhost:3001/orders", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  const res = await fetch("http://localhost:3001/simplepay/start", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ total }),
+  });
 
-      if (res.ok) {
-        alert("Rendelés sikeresen leadva!");
-        setCart(0); // 🔥 számláló azonnal nulláz
-        fetchCart();
-      } else {
-        const err = await res.json();
-        alert("Hiba a rendelés során: " + err.error);
-      }
-    } catch (err) {
-      console.error("⚠️ Fizetési hiba:", err);
-      alert("Hiba a rendelés során!");
-    }
-  };
+  const paymentData = await res.json();
+
+  // 🔹 Másik action: NEM SimplePay URL, hanem mock server!
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "http://localhost:3001/simplepay/mock-prepare"; 
+
+
+  Object.entries(paymentData).forEach(([key, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = key;
+    input.value = Array.isArray(value) ? JSON.stringify(value) : value;
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+};
+
+
+
 
   // 💰 Összesítés akciós árakkal
   const total = cartItems.reduce(
@@ -289,7 +301,7 @@ export default function Cart() {
                 Kosár törlése
               </button>
               <button
-                onClick={handleCheckout}
+                onClick={handleCheckoutSimplePay}
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-semibold"
               >
                 Fizetés
