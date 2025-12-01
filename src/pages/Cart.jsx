@@ -3,6 +3,8 @@ import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import { useCart } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Cart() {
   const [cartItems, setCartItems] = useState([]); // Kosár tartalma
@@ -78,8 +80,18 @@ export default function Cart() {
   };
 
   useEffect(() => {
-    fetchCart();
-  }, []);
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      fetchCart();
+    } else {
+      setCartItems([]);
+      setCart(0);
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
+
 
   // Darabszám frissítése (PATCH)
   const updateQuantity = async (id, newQuantity) => {
@@ -140,38 +152,12 @@ export default function Cart() {
   };
 
   // Megrendelés leadása
-const handleCheckoutSimplePay = async () => {
-  const user = auth.currentUser;
-  const token = await user.getIdToken();
+const navigate = useNavigate();
 
-  const res = await fetch("http://localhost:3001/simplepay/start", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ total }),
-  });
-
-  const paymentData = await res.json();
-
-  // 🔹 Másik action: NEM SimplePay URL, hanem mock server!
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = "http://localhost:3001/simplepay/mock-prepare"; 
-
-
-  Object.entries(paymentData).forEach(([key, value]) => {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = key;
-    input.value = Array.isArray(value) ? JSON.stringify(value) : value;
-    form.appendChild(input);
-  });
-
-  document.body.appendChild(form);
-  form.submit();
+const handleCheckoutSimplePay = () => {
+  navigate("/payment/mock");
 };
+
 
 
 
@@ -203,6 +189,8 @@ const handleCheckoutSimplePay = async () => {
           <div className="space-y-6">
             {cartItems.map((item) => (
               <div
+
+              data-testid="cart-item"
                 key={`${item.book_id}-${item.item_type}`}
                 className="flex items-center justify-between bg-[#fefae0] hover:shadow-2xl transition-shadow p-5 rounded-2xl shadow-xl border border-yellow-300"
               >

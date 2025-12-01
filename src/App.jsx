@@ -30,6 +30,7 @@ import ManageHomePage from "./pages/admin/ManageHomePage";
 import DiscountManager from "./pages/admin/DiscountManager";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFail from "./pages/PaymentFail";
+import MockPayment from "./pages/demo/MockPayment";
 
 
 
@@ -68,9 +69,9 @@ function App() {
             <Route path="/my-digital-books" element={<MyDigitalBooks />} />
             <Route path="/ebook/:id" element={<Ebook />} />
             <Route path="/audiobook/:id" element={<Audio />} />
-                  <Route path="/payment/success" element={<PaymentSuccess />} />
-      <Route path="/payment/fail" element={<PaymentFail />} />
-
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/fail" element={<PaymentFail />} />
+            <Route path="/payment/mock" element={<MockPayment />} />
 
           </Routes>
         </div>

@@ -6,43 +6,49 @@ import { useCart } from "../context/CartContext";
 export default function PaymentSuccess() {
   const auth = getAuth();
   const { setCart } = useCart();
-  
-  // Ha a CartContext-ben tárolod a termékeket is:
-  // const { setCartItems } = useCart();  <-- ha ilyen is van
 
   useEffect(() => {
-    const clearCartAfterPayment = async () => {
+    let executed = false;
+
+    const finalizeOrder = async () => {
+      if (executed) return;
+      executed = true;
+
       const user = auth.currentUser;
       if (!user) return;
 
       try {
         const token = await user.getIdToken();
 
-        // 💥 1. Kosár ürítése backend oldalon
-        await fetch("http://localhost:3001/cart", {
-          method: "DELETE",
+        // Rendelés mentése
+        const orderRes = await fetch("http://localhost:3001/orders", {
+          method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
 
-        // 💥 2. Frontend kosár kiürítése
+        if (!orderRes.ok) {
+          console.error("❌ Hiba rendelés mentésekor");
+        }
+
         setCart(0);
-        // Ha a CartContext tárolja a kosár elemeket: setCartItems([]);
 
       } catch (err) {
-        console.error("❌ Hiba a kosár törlésekor:", err);
+        console.error("❌ Fizetés utáni feldolgozás hibája:", err);
       }
     };
 
-    clearCartAfterPayment();
-  }, [auth, setCart]);
+    finalizeOrder();
+  }, []);
 
   return (
     <div className="text-center p-10">
       <h1 className="text-3xl font-bold text-green-700">Sikeres fizetés!</h1>
       <p className="mt-4 text-lg">
-        Köszönjük a rendelésed, megkaptuk! Hamarosan küldjük a visszaigazolást.
+        Köszönjük a rendelésed! A fizetés sikeresen megtörtént, a rendelést
+        feldolgoztuk.
       </p>
 
       <Link

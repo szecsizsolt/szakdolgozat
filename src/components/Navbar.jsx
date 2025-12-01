@@ -103,7 +103,7 @@ export default function Navbar() {
                 >
                   <FaShoppingCart size={18} />
                   {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                    <span data-testid="cart-count" className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
                       {cartCount}
                     </span>
                   )}

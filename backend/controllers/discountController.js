@@ -272,7 +272,7 @@ export const getDiscountByBookPublic = async (req, res) => {
     const { rows } = await pool.query(query, [bookId]);
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: "Nincs aktív akció ehhez a könyvhöz." });
+      return res.json({ value: null });
     }
 
     const discount = rows[0];

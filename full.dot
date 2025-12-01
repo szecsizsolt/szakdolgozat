@@ -1,0 +1,254 @@
+strict digraph "dependency-cruiser output"{
+    rankdir="LR" splines="true" overlap="false" nodesep="0.16" ranksep="0.18" fontname="Helvetica-bold" fontsize="9" style="rounded,bold,filled" fillcolor="#ffffff" compound="true"
+    node [shape="box" style="rounded, filled" height="0.2" color="black" fillcolor="#ffffcc" fontcolor="black" fontname="Helvetica" fontsize="9"]
+    edge [arrowhead="normal" arrowsize="0.6" penwidth="2.0" color="#00000033" fontname="Helvetica" fontsize="9"]
+
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/audiobookController.js" [label=<audiobookController.js> tooltip="audiobookController.js" URL="backend/controllers/audiobookController.js" ] } }
+    "backend/controllers/audiobookController.js" -> "backend/db.js"
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/authController.js" [label=<authController.js> tooltip="authController.js" URL="backend/controllers/authController.js" ] } }
+    "backend/controllers/authController.js" -> "node_modules/pg" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/blogController.js" [label=<blogController.js> tooltip="blogController.js" URL="backend/controllers/blogController.js" ] } }
+    "backend/controllers/blogController.js" -> "backend/db.js"
+    "backend/controllers/blogController.js" -> "node_modules/uuid" [xlabel="no-non-package-json" tooltip="no-non-package-json" penwidth="1.0" fontcolor="red" color="red"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/bookController.js" [label=<bookController.js> tooltip="bookController.js" URL="backend/controllers/bookController.js" ] } }
+    "backend/controllers/bookController.js" -> "backend/db.js"
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/cartController.js" [label=<cartController.js> tooltip="cartController.js" URL="backend/controllers/cartController.js" ] } }
+    "backend/controllers/cartController.js" -> "backend/db.js"
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/discountController.js" [label=<discountController.js> tooltip="discountController.js" URL="backend/controllers/discountController.js" ] } }
+    "backend/controllers/discountController.js" -> "backend/db.js"
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/ebookController.js" [label=<ebookController.js> tooltip="ebookController.js" URL="backend/controllers/ebookController.js" ] } }
+    "backend/controllers/ebookController.js" -> "backend/db.js"
+    "backend/controllers/ebookController.js" -> "fs/promises" [style="dashed" penwidth="1.0"]
+    "backend/controllers/ebookController.js" -> "path" [style="dashed" penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/orderController.js" [label=<orderController.js> tooltip="orderController.js" URL="backend/controllers/orderController.js" ] } }
+    "backend/controllers/orderController.js" -> "backend/db.js"
+    "backend/controllers/orderController.js" -> "node_modules/uuid" [xlabel="no-non-package-json" tooltip="no-non-package-json" penwidth="1.0" fontcolor="red" color="red"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/reviewsController.js" [label=<reviewsController.js> tooltip="reviewsController.js" URL="backend/controllers/reviewsController.js" ] } }
+    "backend/controllers/reviewsController.js" -> "backend/db.js"
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/controllers" {label="controllers" "backend/controllers/userController.js" [label=<userController.js> tooltip="userController.js" URL="backend/controllers/userController.js" ] } }
+    "backend/controllers/userController.js" -> "backend/db.js"
+    subgraph "cluster_backend" {label="backend" "backend/db.js" [label=<db.js> tooltip="db.js" URL="backend/db.js" ] }
+    "backend/db.js" -> "node_modules/dotenv" [penwidth="1.0"]
+    "backend/db.js" -> "node_modules/pg" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" "backend/index.js" [label=<index.js> tooltip="index.js" URL="backend/index.js" ] }
+    "backend/index.js" -> "backend/middleware/authMiddleware.js"
+    "backend/index.js" -> "backend/routes/audiobookRoutes.js"
+    "backend/index.js" -> "backend/routes/authRoutes.js"
+    "backend/index.js" -> "backend/routes/blogRoutes.js"
+    "backend/index.js" -> "backend/routes/bookRoutes.js"
+    "backend/index.js" -> "backend/routes/cartRoutes.js"
+    "backend/index.js" -> "backend/routes/discountRoutes.js"
+    "backend/index.js" -> "backend/routes/ebookRoutes.js"
+    "backend/index.js" -> "backend/routes/orderRoutes.js"
+    "backend/index.js" -> "backend/routes/reviewsRoutes.js"
+    "backend/index.js" -> "backend/routes/simplepay.js"
+    "backend/index.js" -> "backend/routes/simplepayMock.js"
+    "backend/index.js" -> "backend/routes/uploads.js"
+    "backend/index.js" -> "backend/routes/userRoutes.js"
+    "backend/index.js" -> "node_modules/cors" [penwidth="1.0"]
+    "backend/index.js" -> "node_modules/dotenv" [penwidth="1.0"]
+    "backend/index.js" -> "node_modules/express" [penwidth="1.0"]
+    "backend/index.js" -> "node_modules/firebase-admin" [penwidth="1.0"]
+    "backend/index.js" -> "fs" [style="dashed" penwidth="1.0"]
+    "backend/index.js" -> "node_modules/multer" [penwidth="1.0"]
+    "backend/index.js" -> "path" [style="dashed" penwidth="1.0"]
+    "backend/index.js" -> "url" [style="dashed" penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/middleware" {label="middleware" "backend/middleware/authMiddleware.js" [label=<authMiddleware.js> tooltip="authMiddleware.js" URL="backend/middleware/authMiddleware.js" ] } }
+    "backend/middleware/authMiddleware.js" -> "backend/db.js"
+    "backend/middleware/authMiddleware.js" -> "node_modules/firebase-admin" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/middleware" {label="middleware" "backend/middleware/ensureUserInDatabase.js" [label=<ensureUserInDatabase.js> tooltip="ensureUserInDatabase.js" URL="backend/middleware/ensureUserInDatabase.js" ] } }
+    "backend/middleware/ensureUserInDatabase.js" -> "backend/db.js"
+    "backend/middleware/ensureUserInDatabase.js" -> "node_modules/uuid" [xlabel="no-non-package-json" tooltip="no-non-package-json" penwidth="1.0" fontcolor="red" color="red"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/audiobookRoutes.js" [label=<audiobookRoutes.js> tooltip="audiobookRoutes.js" URL="backend/routes/audiobookRoutes.js" ] } }
+    "backend/routes/audiobookRoutes.js" -> "backend/controllers/audiobookController.js"
+    "backend/routes/audiobookRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/audiobookRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/authRoutes.js" [label=<authRoutes.js> tooltip="authRoutes.js" URL="backend/routes/authRoutes.js" ] } }
+    "backend/routes/authRoutes.js" -> "backend/controllers/authController.js"
+    "backend/routes/authRoutes.js" -> "backend/db.js"
+    "backend/routes/authRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/authRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/blogRoutes.js" [label=<blogRoutes.js> tooltip="blogRoutes.js" URL="backend/routes/blogRoutes.js" ] } }
+    "backend/routes/blogRoutes.js" -> "backend/controllers/blogController.js"
+    "backend/routes/blogRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/blogRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/bookRoutes.js" [label=<bookRoutes.js> tooltip="bookRoutes.js" URL="backend/routes/bookRoutes.js" ] } }
+    "backend/routes/bookRoutes.js" -> "backend/controllers/bookController.js"
+    "backend/routes/bookRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/bookRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/cartRoutes.js" [label=<cartRoutes.js> tooltip="cartRoutes.js" URL="backend/routes/cartRoutes.js" ] } }
+    "backend/routes/cartRoutes.js" -> "backend/controllers/cartController.js"
+    "backend/routes/cartRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/cartRoutes.js" -> "backend/middleware/ensureUserInDatabase.js"
+    "backend/routes/cartRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/discountRoutes.js" [label=<discountRoutes.js> tooltip="discountRoutes.js" URL="backend/routes/discountRoutes.js" ] } }
+    "backend/routes/discountRoutes.js" -> "backend/controllers/discountController.js"
+    "backend/routes/discountRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/discountRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/ebookRoutes.js" [label=<ebookRoutes.js> tooltip="ebookRoutes.js" URL="backend/routes/ebookRoutes.js" ] } }
+    "backend/routes/ebookRoutes.js" -> "backend/controllers/ebookController.js"
+    "backend/routes/ebookRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/ebookRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/orderRoutes.js" [label=<orderRoutes.js> tooltip="orderRoutes.js" URL="backend/routes/orderRoutes.js" ] } }
+    "backend/routes/orderRoutes.js" -> "backend/controllers/orderController.js"
+    "backend/routes/orderRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/orderRoutes.js" -> "backend/middleware/ensureUserInDatabase.js"
+    "backend/routes/orderRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/reviewsRoutes.js" [label=<reviewsRoutes.js> tooltip="reviewsRoutes.js" URL="backend/routes/reviewsRoutes.js" ] } }
+    "backend/routes/reviewsRoutes.js" -> "backend/controllers/reviewsController.js"
+    "backend/routes/reviewsRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/reviewsRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/simplepay.js" [label=<simplepay.js> tooltip="simplepay.js" URL="backend/routes/simplepay.js" ] } }
+    "backend/routes/simplepay.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/simplepayMock.js" [label=<simplepayMock.js> tooltip="simplepayMock.js" URL="backend/routes/simplepayMock.js" ] } }
+    "backend/routes/simplepayMock.js" -> "node_modules/express" [penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/uploads.js" [label=<uploads.js> tooltip="uploads.js" URL="backend/routes/uploads.js" ] } }
+    "backend/routes/uploads.js" -> "node_modules/express" [penwidth="1.0"]
+    "backend/routes/uploads.js" -> "fs" [style="dashed" penwidth="1.0"]
+    "backend/routes/uploads.js" -> "node_modules/multer" [penwidth="1.0"]
+    "backend/routes/uploads.js" -> "path" [style="dashed" penwidth="1.0"]
+    subgraph "cluster_backend" {label="backend" subgraph "cluster_backend/routes" {label="routes" "backend/routes/userRoutes.js" [label=<userRoutes.js> tooltip="userRoutes.js" URL="backend/routes/userRoutes.js" ] } }
+    "backend/routes/userRoutes.js" -> "backend/controllers/userController.js"
+    "backend/routes/userRoutes.js" -> "backend/middleware/authMiddleware.js"
+    "backend/routes/userRoutes.js" -> "node_modules/express" [penwidth="1.0"]
+    "fs" [label=<fs> tooltip="fs" URL="https://nodejs.org/api/fs.html" color="grey" fontcolor="grey"]
+    subgraph "cluster_fs" {label="fs" "fs/promises" [label=<promises> tooltip="promises" URL="https://nodejs.org/api/fs.html" color="grey" fontcolor="grey"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules/cors" [label=<cors> tooltip="cors" URL="https://www.npmjs.com/package/cors" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules/dotenv" [label=<dotenv> tooltip="dotenv" URL="https://www.npmjs.com/package/dotenv" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules/express" [label=<express> tooltip="express" URL="https://www.npmjs.com/package/express" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules/firebase-admin" [label=<firebase-admin> tooltip="firebase-admin" URL="https://www.npmjs.com/package/firebase-admin" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules/multer" [label=<multer> tooltip="multer" URL="https://www.npmjs.com/package/multer" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules/pg" [label=<pg> tooltip="pg" URL="https://www.npmjs.com/package/pg" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    subgraph "cluster_node_modules" {label="node_modules" "node_modules/uuid" [label=<uuid> tooltip="uuid" URL="https://www.npmjs.com/package/uuid" shape="box3d" fillcolor="#c40b0a1a" fontcolor="#c40b0a"] }
+    "path" [label=<path> tooltip="path" URL="https://nodejs.org/api/path.html" color="grey" fontcolor="grey"]
+    subgraph "cluster_src" {label="src" "src/App.jsx" [label=<App.jsx> tooltip="App.jsx" URL="src/App.jsx" fillcolor="#ffff77"] }
+    "src/App.jsx" -> "src/components/AdminRoute.jsx"
+    "src/App.jsx" -> "src/components/Footer.jsx"
+    "src/App.jsx" -> "src/components/Navbar.jsx"
+    "src/App.jsx" -> "src/pages/admin/AdminDashboard.jsx"
+    "src/App.jsx" -> "src/pages/admin/DiscountManager.jsx"
+    "src/App.jsx" -> "src/pages/admin/ManageAudioBook.jsx"
+    "src/App.jsx" -> "src/pages/admin/ManageBlog.jsx"
+    "src/App.jsx" -> "src/pages/admin/ManageBook.jsx"
+    "src/App.jsx" -> "src/pages/admin/ManageEBook.jsx"
+    "src/App.jsx" -> "src/pages/admin/ManageHomePage.jsx"
+    "src/App.jsx" -> "src/pages/admin/Orders.jsx"
+    "src/App.jsx" -> "src/pages/Audio.jsx"
+    "src/App.jsx" -> "src/pages/AudioBookList.jsx"
+    "src/App.jsx" -> "src/pages/Blog.jsx"
+    "src/App.jsx" -> "src/pages/BlogPost.jsx"
+    "src/App.jsx" -> "src/pages/BookDetails.jsx"
+    "src/App.jsx" -> "src/pages/BookList.jsx"
+    "src/App.jsx" -> "src/pages/Cart.jsx"
+    "src/App.jsx" -> "src/pages/Ebook.jsx"
+    "src/App.jsx" -> "src/pages/EbookList.jsx"
+    "src/App.jsx" -> "src/pages/Home.jsx"
+    "src/App.jsx" -> "src/pages/info/Adatvedelem.jsx"
+    "src/App.jsx" -> "src/pages/info/Aszf.jsx"
+    "src/App.jsx" -> "src/pages/info/GYIK.jsx"
+    "src/App.jsx" -> "src/pages/info/Kapcsolat.jsx"
+    "src/App.jsx" -> "src/pages/Login.jsx"
+    "src/App.jsx" -> "src/pages/MyDigitalBooks.jsx"
+    "src/App.jsx" -> "src/pages/PaymentFail.jsx"
+    "src/App.jsx" -> "src/pages/PaymentSuccess.jsx"
+    "src/App.jsx" -> "src/pages/Profile.jsx"
+    "src/App.jsx" -> "src/pages/Register.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/assets" {label="assets" "src/assets/ChatGPT Image 2025. okt. 16. 18_17_04.png" [label=<ChatGPT Image 2025. okt. 16. 18_17_04.png> tooltip="ChatGPT Image 2025. okt. 16. 18_17_04.png" URL="src/assets/ChatGPT Image 2025. okt. 16. 18_17_04.png" ] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/assets" {label="assets" "src/assets/Névtelen.png" [label=<Névtelen.png> tooltip="Névtelen.png" URL="src/assets/Névtelen.png" ] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/assets" {label="assets" "src/assets/Névtelen2.png" [label=<Névtelen2.png> tooltip="Névtelen2.png" URL="src/assets/Névtelen2.png" ] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/assets" {label="assets" "src/assets/peldakonyv.png" [label=<peldakonyv.png> tooltip="peldakonyv.png" URL="src/assets/peldakonyv.png" ] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/AdminRoute.jsx" [label=<AdminRoute.jsx> tooltip="AdminRoute.jsx" URL="src/components/AdminRoute.jsx" fillcolor="#ffff77"] } }
+    "src/components/AdminRoute.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/AudioPlayer.jsx" [label=<AudioPlayer.jsx> tooltip="AudioPlayer.jsx" URL="src/components/AudioPlayer.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/BookCard.jsx" [label=<BookCard.jsx> tooltip="BookCard.jsx" URL="src/components/BookCard.jsx" fillcolor="#ffff77"] } }
+    "src/components/BookCard.jsx" -> "src/assets/peldakonyv.png"
+    "src/components/BookCard.jsx" -> "src/context/CartContext.jsx"
+    "src/components/BookCard.jsx" -> "src/utils/cart.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/BookListGeneric.jsx" [label=<BookListGeneric.jsx> tooltip="BookListGeneric.jsx" URL="src/components/BookListGeneric.jsx" fillcolor="#ffff77"] } }
+    "src/components/BookListGeneric.jsx" -> "src/components/BookCard.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/Carousel.jsx" [label=<Carousel.jsx> tooltip="Carousel.jsx" URL="src/components/Carousel.jsx" fillcolor="#ffff77"] } }
+    "src/components/Carousel.jsx" -> "src/assets/ChatGPT Image 2025. okt. 16. 18_17_04.png"
+    "src/components/Carousel.jsx" -> "src/assets/Névtelen.png"
+    "src/components/Carousel.jsx" -> "src/assets/Névtelen2.png"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/CategorySlider.jsx" [label=<CategorySlider.jsx> tooltip="CategorySlider.jsx" URL="src/components/CategorySlider.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/CustomerReviews.jsx" [label=<CustomerReviews.jsx> tooltip="CustomerReviews.jsx" URL="src/components/CustomerReviews.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/EbookReader.jsx" [label=<EbookReader.jsx> tooltip="EbookReader.jsx" URL="src/components/EbookReader.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/Footer.jsx" [label=<Footer.jsx> tooltip="Footer.jsx" URL="src/components/Footer.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/Navbar.jsx" [label=<Navbar.jsx> tooltip="Navbar.jsx" URL="src/components/Navbar.jsx" fillcolor="#ffff77"] } }
+    "src/components/Navbar.jsx" -> "src/context/CartContext.jsx"
+    "src/components/Navbar.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/NewsletterSignup.jsx" [label=<NewsletterSignup.jsx> tooltip="NewsletterSignup.jsx" URL="src/components/NewsletterSignup.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/RecommendedBooks.jsx" [label=<RecommendedBooks.jsx> tooltip="RecommendedBooks.jsx" URL="src/components/RecommendedBooks.jsx" fillcolor="#ffff77"] } }
+    "src/components/RecommendedBooks.jsx" -> "src/assets/peldakonyv.png"
+    "src/components/RecommendedBooks.jsx" -> "src/components/BookCard.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/components" {label="components" "src/components/SearchBar.jsx" [label=<SearchBar.jsx> tooltip="SearchBar.jsx" URL="src/components/SearchBar.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/context" {label="context" "src/context/CartContext.jsx" [label=<CartContext.jsx> tooltip="CartContext.jsx" URL="src/context/CartContext.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" "src/firebase.js" [label=<firebase.js> tooltip="firebase.js" URL="src/firebase.js" ] }
+    subgraph "cluster_src" {label="src" "src/index.css" [label=<index.css> tooltip="index.css" URL="src/index.css" ] }
+    subgraph "cluster_src" {label="src" "src/main.jsx" [label=<main.jsx> tooltip="main.jsx" URL="src/main.jsx" fillcolor="#ffff77"] }
+    "src/main.jsx" -> "src/App.jsx"
+    "src/main.jsx" -> "src/context/CartContext.jsx"
+    "src/main.jsx" -> "src/index.css"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/Audio.jsx" [label=<Audio.jsx> tooltip="Audio.jsx" URL="src/pages/Audio.jsx" fillcolor="#ffff77"] } }
+    "src/pages/Audio.jsx" -> "src/assets/peldakonyv.png"
+    "src/pages/Audio.jsx" -> "src/components/AudioPlayer.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/AudioBookList.jsx" [label=<AudioBookList.jsx> tooltip="AudioBookList.jsx" URL="src/pages/AudioBookList.jsx" fillcolor="#ffff77"] } }
+    "src/pages/AudioBookList.jsx" -> "src/components/BookListGeneric.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/Blog.jsx" [label=<Blog.jsx> tooltip="Blog.jsx" URL="src/pages/Blog.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/BlogPost.jsx" [label=<BlogPost.jsx> tooltip="BlogPost.jsx" URL="src/pages/BlogPost.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/BookDetails.jsx" [label=<BookDetails.jsx> tooltip="BookDetails.jsx" URL="src/pages/BookDetails.jsx" fillcolor="#ffff77"] } }
+    "src/pages/BookDetails.jsx" -> "src/context/CartContext.jsx"
+    "src/pages/BookDetails.jsx" -> "src/utils/cart.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/BookList.jsx" [label=<BookList.jsx> tooltip="BookList.jsx" URL="src/pages/BookList.jsx" fillcolor="#ffff77"] } }
+    "src/pages/BookList.jsx" -> "src/components/BookListGeneric.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/Cart.jsx" [label=<Cart.jsx> tooltip="Cart.jsx" URL="src/pages/Cart.jsx" fillcolor="#ffff77"] } }
+    "src/pages/Cart.jsx" -> "src/context/CartContext.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/Ebook.jsx" [label=<Ebook.jsx> tooltip="Ebook.jsx" URL="src/pages/Ebook.jsx" fillcolor="#ffff77"] } }
+    "src/pages/Ebook.jsx" -> "src/components/EbookReader.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/EbookList.jsx" [label=<EbookList.jsx> tooltip="EbookList.jsx" URL="src/pages/EbookList.jsx" fillcolor="#ffff77"] } }
+    "src/pages/EbookList.jsx" -> "src/components/BookListGeneric.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/Home.jsx" [label=<Home.jsx> tooltip="Home.jsx" URL="src/pages/Home.jsx" fillcolor="#ffff77"] } }
+    "src/pages/Home.jsx" -> "src/components/Carousel.jsx"
+    "src/pages/Home.jsx" -> "src/components/CategorySlider.jsx"
+    "src/pages/Home.jsx" -> "src/components/CustomerReviews.jsx"
+    "src/pages/Home.jsx" -> "src/components/NewsletterSignup.jsx"
+    "src/pages/Home.jsx" -> "src/components/RecommendedBooks.jsx"
+    "src/pages/Home.jsx" -> "src/components/SearchBar.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/Login.jsx" [label=<Login.jsx> tooltip="Login.jsx" URL="src/pages/Login.jsx" fillcolor="#ffff77"] } }
+    "src/pages/Login.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/MyDigitalBooks.jsx" [label=<MyDigitalBooks.jsx> tooltip="MyDigitalBooks.jsx" URL="src/pages/MyDigitalBooks.jsx" fillcolor="#ffff77"] } }
+    "src/pages/MyDigitalBooks.jsx" -> "src/components/BookCard.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/PaymentFail.jsx" [label=<PaymentFail.jsx> tooltip="PaymentFail.jsx" URL="src/pages/PaymentFail.jsx" fillcolor="#ffff77"] } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/PaymentSuccess.jsx" [label=<PaymentSuccess.jsx> tooltip="PaymentSuccess.jsx" URL="src/pages/PaymentSuccess.jsx" fillcolor="#ffff77"] } }
+    "src/pages/PaymentSuccess.jsx" -> "src/context/CartContext.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/Profile.jsx" [label=<Profile.jsx> tooltip="Profile.jsx" URL="src/pages/Profile.jsx" fillcolor="#ffff77"] } }
+    "src/pages/Profile.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" "src/pages/Register.jsx" [label=<Register.jsx> tooltip="Register.jsx" URL="src/pages/Register.jsx" fillcolor="#ffff77"] } }
+    "src/pages/Register.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/admin" {label="admin" "src/pages/admin/AdminDashboard.jsx" [label=<AdminDashboard.jsx> tooltip="AdminDashboard.jsx" URL="src/pages/admin/AdminDashboard.jsx" fillcolor="#ffff77"] } } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/admin" {label="admin" "src/pages/admin/DiscountManager.jsx" [label=<DiscountManager.jsx> tooltip="DiscountManager.jsx" URL="src/pages/admin/DiscountManager.jsx" fillcolor="#ffff77"] } } }
+    "src/pages/admin/DiscountManager.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/admin" {label="admin" "src/pages/admin/ManageAudioBook.jsx" [label=<ManageAudioBook.jsx> tooltip="ManageAudioBook.jsx" URL="src/pages/admin/ManageAudioBook.jsx" fillcolor="#ffff77"] } } }
+    "src/pages/admin/ManageAudioBook.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/admin" {label="admin" "src/pages/admin/ManageBlog.jsx" [label=<ManageBlog.jsx> tooltip="ManageBlog.jsx" URL="src/pages/admin/ManageBlog.jsx" fillcolor="#ffff77"] } } }
+    "src/pages/admin/ManageBlog.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/admin" {label="admin" "src/pages/admin/ManageBook.jsx" [label=<ManageBook.jsx> tooltip="ManageBook.jsx" URL="src/pages/admin/ManageBook.jsx" fillcolor="#ffff77"] } } }
+    "src/pages/admin/ManageBook.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/admin" {label="admin" "src/pages/admin/ManageEBook.jsx" [label=<ManageEBook.jsx> tooltip="ManageEBook.jsx" URL="src/pages/admin/ManageEBook.jsx" fillcolor="#ffff77"] } } }
+    "src/pages/admin/ManageEBook.jsx" -> "src/firebase.js"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/admin" {label="admin" "src/pages/admin/ManageHomePage.jsx" [label=<ManageHomePage.jsx> tooltip="ManageHomePage.jsx" URL="src/pages/admin/ManageHomePage.jsx" fillcolor="#ffff77"] } } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/admin" {label="admin" "src/pages/admin/Orders.jsx" [label=<Orders.jsx> tooltip="Orders.jsx" URL="src/pages/admin/Orders.jsx" fillcolor="#ffff77"] } } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/info" {label="info" "src/pages/info/Adatvedelem.jsx" [label=<Adatvedelem.jsx> tooltip="Adatvedelem.jsx" URL="src/pages/info/Adatvedelem.jsx" fillcolor="#ffff77"] } } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/info" {label="info" "src/pages/info/Aszf.jsx" [label=<Aszf.jsx> tooltip="Aszf.jsx" URL="src/pages/info/Aszf.jsx" fillcolor="#ffff77"] } } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/info" {label="info" "src/pages/info/GYIK.jsx" [label=<GYIK.jsx> tooltip="GYIK.jsx" URL="src/pages/info/GYIK.jsx" fillcolor="#ffff77"] } } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/pages" {label="pages" subgraph "cluster_src/pages/info" {label="info" "src/pages/info/Kapcsolat.jsx" [label=<Kapcsolat.jsx> tooltip="Kapcsolat.jsx" URL="src/pages/info/Kapcsolat.jsx" fillcolor="#ffff77"] } } }
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/routes" {label="routes" "src/routes/AppRoutes.jsx" [label=<AppRoutes.jsx> tooltip="AppRoutes.jsx" URL="src/routes/AppRoutes.jsx" fillcolor="#ffff77"] } }
+    "src/routes/AppRoutes.jsx" -> "src/pages/BookDetails.jsx"
+    "src/routes/AppRoutes.jsx" -> "src/pages/BookList.jsx"
+    "src/routes/AppRoutes.jsx" -> "src/pages/Cart.jsx"
+    "src/routes/AppRoutes.jsx" -> "src/pages/Home.jsx"
+    "src/routes/AppRoutes.jsx" -> "src/pages/Login.jsx"
+    "src/routes/AppRoutes.jsx" -> "src/pages/Register.jsx"
+    subgraph "cluster_src" {label="src" subgraph "cluster_src/utils" {label="utils" "src/utils/cart.js" [label=<cart.js> tooltip="cart.js" URL="src/utils/cart.js" ] } }
+    "url" [label=<url> tooltip="url" URL="https://nodejs.org/api/url.html" color="grey" fontcolor="grey"]
+}

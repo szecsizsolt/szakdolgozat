@@ -19,6 +19,8 @@ export default function DiscountManager() {
   const [loading, setLoading] = useState(false);
   const [discounts, setDiscounts] = useState([]);
   const [page, setPage] = useState(1);
+  const [discountName, setDiscountName] = useState("");
+
 
   const API_BASE = "http://localhost:3001";
   const ITEMS_PER_PAGE = 10;
@@ -97,11 +99,12 @@ export default function DiscountManager() {
   };
 
   // ===== Akció alkalmazása =====
-  const applyDiscount = async () => {
+    const applyDiscount = async () => {
     if (!discountValue || selected.length === 0) {
       alert("Adj meg százalékot és válassz könyveket!");
       return;
     }
+
     const value = parseFloat(discountValue);
     if (isNaN(value) || value <= 0 || value > 100) {
       alert("A kedvezmény értéke 1 és 100 között legyen!");
@@ -110,6 +113,10 @@ export default function DiscountManager() {
 
     try {
       const token = await auth.currentUser.getIdToken();
+      const finalName = discountName
+        ? discountName         
+        : `Kedvezmény`;  
+
       const res = await fetch(`${API_BASE}/api/discounts`, {
         method: "POST",
         headers: {
@@ -117,7 +124,7 @@ export default function DiscountManager() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: `${value}% kedvezmény`,
+          name: finalName,
           value,
           book_ids: selected,
         }),
@@ -128,6 +135,7 @@ export default function DiscountManager() {
       alert("✅ Akció sikeresen létrehozva!");
       setSelected([]);
       setDiscountValue("");
+      setDiscountName("");        // <-- 🔥 EZ HIÁNYZOTT!
       fetchBooks();
       fetchDiscounts();
     } catch (err) {
@@ -135,6 +143,7 @@ export default function DiscountManager() {
       alert("Hiba történt az akció létrehozásakor.");
     }
   };
+
 
   // ===== Akció törlése =====
   const deleteDiscount = async (id) => {
@@ -206,6 +215,17 @@ export default function DiscountManager() {
 
       {/* Akció beállítás */}
       <div className="flex gap-2 mb-4">
+
+        {/* Akció neve */}
+        <input
+          type="text"
+          placeholder="Akció neve"
+          className="border px-3 py-2 w-60"
+          value={discountName}
+          onChange={(e) => setDiscountName(e.target.value)}
+        />
+
+        {/* Kedvezmény érték */}
         <input
           type="number"
           placeholder="% kedvezmény"
@@ -213,6 +233,7 @@ export default function DiscountManager() {
           value={discountValue}
           onChange={(e) => setDiscountValue(e.target.value)}
         />
+
         <button
           onClick={applyDiscount}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
@@ -221,6 +242,7 @@ export default function DiscountManager() {
           Akció alkalmazása ({selected.length})
         </button>
       </div>
+
 
       {/* Könyvek táblázata */}
       <div className="overflow-x-auto">

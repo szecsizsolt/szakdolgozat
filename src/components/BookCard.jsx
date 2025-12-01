@@ -112,7 +112,9 @@ export default function BookCard({ book }) {
       to={`/book/${bookId}`}
       className="transform hover:scale-105 transition duration-300 block relative"
     >
-      <div className="bg-[#fefae0] p-5 rounded-2xl shadow-xl hover:shadow-2xl text-center h-full border border-yellow-300 relative overflow-hidden">
+      <div 
+      data-testid="book-card"
+      className="bg-[#fefae0] p-5 rounded-2xl shadow-xl hover:shadow-2xl text-center h-full border border-yellow-300 relative overflow-hidden">
         {/* 🔴 Akció szalag — csak ha van akció és a könyvet még nem vették meg */}
         {discount && !alreadyPurchased && (
           <div className="absolute top-0 left-0 bg-red-600 text-white font-bold text-xs px-3 py-1 rounded-br-lg shadow-md z-10">
@@ -126,7 +128,9 @@ export default function BookCard({ book }) {
           className="w-full h-[220px] object-contain rounded-md mb-3"
         />
 
-        <h4 className="text-lg font-bold text-green-900">{book.title}</h4>
+        <h4 data-testid="book-title" className="text-lg font-bold text-green-900">
+          {book.title}
+        </h4>
         <p className="text-sm text-gray-600">
           Szerző: {book.author || "Ismeretlen"}
         </p>
@@ -157,6 +161,7 @@ export default function BookCard({ book }) {
 
         <div className="flex justify-center">
           <button
+            data-testid="add-to-cart-btn"
             onClick={handleAddToCart}
             disabled={alreadyPurchased}
             className={`px-6 py-2 rounded-lg flex items-center gap-2 shadow transition
