@@ -1,27 +1,25 @@
 import { useEffect, useState } from "react";
 import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import { getAuth } from "firebase/auth";
+import { Link, useNavigate } from "react-router-dom";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useCart } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
-
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState([]); // Kosár tartalma
+  const [cartItems, setCartItems] = useState([]);
   const auth = getAuth();
-  const { setCart } = useCart(); // 🔥 Navbar számláló frissítése
+  const { setCart } = useCart();
+  const navigate = useNavigate();
 
-  // Kosár lekérése a backendtől
+  // Kosár lekérése
   const fetchCart = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
     try {
       const token = await user.getIdToken();
+
       const res = await fetch("http://localhost:3001/cart", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
@@ -32,7 +30,7 @@ export default function Cart() {
 
       const data = await res.json();
 
-      // Könyv képek és akciós árak betöltése
+      // Ár + akció számítás
       const withImagesAndDiscounts = await Promise.all(
         data.map(async (item) => {
           let finalPrice = item.price;
@@ -66,7 +64,7 @@ export default function Cart() {
 
       setCartItems(withImagesAndDiscounts);
 
-      // 🔹 Számláló — összes darabszám
+      // Kosár ikon számláló
       const totalItems = withImagesAndDiscounts.reduce(
         (sum, i) => sum + i.quantity,
         0
@@ -79,27 +77,24 @@ export default function Cart() {
     }
   };
 
+  // Auth listener
   useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (user) {
-      fetchCart();
-    } else {
-      setCartItems([]);
-      setCart(0);
-    }
-  });
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) fetchCart();
+      else {
+        setCartItems([]);
+        setCart(0);
+      }
+    });
 
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
 
-
-  // Darabszám frissítése (PATCH)
+  // Mennyiség módosítás
   const updateQuantity = async (id, newQuantity) => {
     if (newQuantity < 1) return;
-
     try {
-      const user = auth.currentUser;
-      const token = await user.getIdToken();
+      const token = await auth.currentUser.getIdToken();
 
       await fetch(`http://localhost:3001/cart/${id}`, {
         method: "PATCH",
@@ -110,34 +105,32 @@ export default function Cart() {
         body: JSON.stringify({ quantity: newQuantity }),
       });
 
-      fetchCart(); // 🔄 frissítés
+      fetchCart();
     } catch (err) {
       console.error("⚠️ Mennyiség frissítési hiba:", err);
     }
   };
 
-  // Elem eltávolítása a kosárból
+  // Elem törlése
   const removeFromCart = async (id) => {
     try {
-      const user = auth.currentUser;
-      const token = await user.getIdToken();
+      const token = await auth.currentUser.getIdToken();
 
       await fetch(`http://localhost:3001/cart/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      fetchCart(); // 🔄 frissítés
+      fetchCart();
     } catch (err) {
       console.error("⚠️ Eltávolítási hiba:", err);
     }
   };
 
-  // Kosár teljes törlése
+  // Kosár törlése
   const clearCart = async () => {
     try {
-      const user = auth.currentUser;
-      const token = await user.getIdToken();
+      const token = await auth.currentUser.getIdToken();
 
       await fetch("http://localhost:3001/cart", {
         method: "DELETE",
@@ -151,18 +144,43 @@ export default function Cart() {
     }
   };
 
-  // Megrendelés leadása
-const navigate = useNavigate();
+  // ⭐⭐⭐ STRIPE FIZETÉS – új függvény ⭐⭐⭐
+  const handleStripeCheckout = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return alert("Jelentkezz be a fizetéshez!");
 
-const handleCheckoutSimplePay = () => {
-  navigate("/payment/mock");
-};
+      const token = await user.getIdToken();
 
+      const res = await fetch(
+        "http://localhost:3001/stripe/create-checkout-session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ cartItems }),
+        }
+      );
 
+      const data = await res.json();
 
+      if (!data.url) {
+        console.error(data);
+        alert("Hiba történt a fizetés elindításakor.");
+        return;
+      }
 
+      // Átirányítás Stripe-ra
+      window.location.href = data.url;
+    } catch (err) {
+      console.error("⚠️ Stripe fizetési hiba:", err);
+      alert("Nem sikerült elindítani a fizetést!");
+    }
+  };
 
-  // 💰 Összesítés akciós árakkal
+  // Összegzés
   const total = cartItems.reduce(
     (sum, item) => sum + (item.final_price ?? item.price) * item.quantity,
     0
@@ -172,7 +190,6 @@ const handleCheckoutSimplePay = () => {
     <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">
       <h1 className="text-3xl font-bold text-green-900 mb-6">Kosár</h1>
 
-      {/* Ha üres a kosár */}
       {cartItems.length === 0 ? (
         <p className="text-gray-600 text-center text-lg">
           A kosarad jelenleg üres. <br />
@@ -185,12 +202,11 @@ const handleCheckoutSimplePay = () => {
         </p>
       ) : (
         <>
-          {/* Kosár elemek listázása */}
+          {/* Kosár tételek */}
           <div className="space-y-6">
             {cartItems.map((item) => (
               <div
-
-              data-testid="cart-item"
+                data-testid="cart-item"
                 key={`${item.book_id}-${item.item_type}`}
                 className="flex items-center justify-between bg-[#fefae0] hover:shadow-2xl transition-shadow p-5 rounded-2xl shadow-xl border border-yellow-300"
               >
@@ -209,14 +225,15 @@ const handleCheckoutSimplePay = () => {
                     <p className="text-sm text-gray-600">
                       Szerző: {item.author}
                     </p>
+
                     <p className="text-sm text-gray-500 italic">
                       {item.item_type === "ebook" && "E-könyv"}
                       {item.item_type === "audiobook" && "Hangoskönyv"}
                       {item.item_type === "physical" && "Hagyományos könyv"}
                     </p>
 
-                    {/* Mennyiség (csak fizikai könyveknél) */}
-                    {item.item_type === "physical" ? (
+                    {/* Mennyiség csak fizikai könyvnél */}
+                    {item.item_type === "physical" && (
                       <div className="flex items-center gap-2 mt-2">
                         <button
                           onClick={() =>
@@ -238,13 +255,10 @@ const handleCheckoutSimplePay = () => {
                           <FaPlus size={10} />
                         </button>
                       </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 mt-2 italic"></p>
                     )}
                   </div>
                 </div>
 
-                {/* Ár és eltávolítás */}
                 <div className="flex flex-col items-end justify-between h-full gap-4">
                   {item.discount ? (
                     <>
@@ -276,11 +290,12 @@ const handleCheckoutSimplePay = () => {
             ))}
           </div>
 
-          {/* Összesítés és akció gombok */}
+          {/* Összegzés */}
           <div className="mt-8 p-4 bg-yellow-300 rounded-lg flex items-center justify-between shadow-md">
             <p className="text-lg font-bold text-green-900">
               Fizetendő: {total.toLocaleString()} Ft
             </p>
+
             <div className="flex gap-4">
               <button
                 onClick={clearCart}
@@ -288,8 +303,10 @@ const handleCheckoutSimplePay = () => {
               >
                 Kosár törlése
               </button>
+
+              {/* STRIPE fizetés */}
               <button
-                onClick={handleCheckoutSimplePay}
+                onClick={handleStripeCheckout}
                 className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-semibold"
               >
                 Fizetés
