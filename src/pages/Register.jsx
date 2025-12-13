@@ -13,6 +13,7 @@ export default function Register() {
 
   const navigate = useNavigate();
 
+  // Űrlap mezők kezelése
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -20,7 +21,8 @@ export default function Register() {
     }));
   };
 
-    const handleRegister = async (e) => {
+  // Regisztráció
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     try {
@@ -29,9 +31,10 @@ export default function Register() {
         formData.email,
         formData.password
       );
+
       const uid = userCred.user.uid;
 
-      // Mentés Firestore-ba
+      // Firestore felhasználó mentése
       await setDoc(doc(db, "users", uid), {
         uid,
         email: formData.email,
@@ -39,7 +42,7 @@ export default function Register() {
         role: "user",
       });
 
-      // ✅ Backend API hívás (PostgreSQL táblába mentés)
+      // Backend felhasználó mentése
       const token = await userCred.user.getIdToken();
       await fetch("http://localhost:3001/auth/register", {
         method: "POST",
@@ -48,19 +51,17 @@ export default function Register() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name: formData.username, // a backend még "name"-et vár
+          name: formData.username,
           email: formData.email,
         }),
       });
 
-      alert("Sikeres regisztráció!");
       navigate("/");
-    } catch (error) {
-      console.error("Regisztrációs hiba:", error);
-      alert("Hiba történt: " + error.message);
+    } catch (err) {
+      console.error("Regisztrációs hiba:", err);
+      alert("Nem sikerült a regisztráció.");
     }
   };
-
 
   return (
     <div className="max-w-xl mx-auto mt-12 px-8 py-10 bg-white rounded-xl shadow-lg border">
@@ -69,7 +70,6 @@ export default function Register() {
       </h2>
 
       <form onSubmit={handleRegister} className="space-y-5">
-        {/* Felhasználónév */}
         <input
           type="text"
           name="username"
@@ -80,7 +80,6 @@ export default function Register() {
           className="w-full border px-4 py-2 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-green-300"
         />
 
-        {/* Email */}
         <input
           type="email"
           name="email"
@@ -91,7 +90,6 @@ export default function Register() {
           className="w-full border px-4 py-2 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
         />
 
-        {/* Jelszó */}
         <input
           type="password"
           name="password"

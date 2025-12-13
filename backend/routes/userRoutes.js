@@ -4,8 +4,7 @@ import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Felhasználói vásárlások lekérése
-// Csak bejelentkezett felhasználó érheti el
+// Bejelentkezett felhasználó vásárlásai
 router.get("/purchases", authenticate, getUserPurchases);
 
 export default router;

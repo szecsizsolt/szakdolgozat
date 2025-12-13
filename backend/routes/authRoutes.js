@@ -5,10 +5,10 @@ import pool from "../db.js";
 
 const router = express.Router();
 
-// 🔹 Regisztráció (Firebase-ből érkező user hozzáadása az adatbázishoz)
+// Regisztráció
 router.post("/register", authenticate, registerUser);
 
-// 🔹 Bejelentkezett felhasználó adatainak lekérése (pl. ID, email, név)
+// Bejelentkezett felhasználó adatainak lekérése
 router.get("/me", authenticate, async (req, res) => {
   try {
     const firebaseUid = req.user.uid;
@@ -19,13 +19,17 @@ router.get("/me", authenticate, async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ error: "Felhasználó nem található." });
+      return res.status(404).json({
+        error: "Felhasználó nem található."
+      });
     }
 
     res.json(rows[0]);
-  } catch (err) {
-    console.error("Hiba az /auth/me lekérésnél:", err);
-    res.status(500).json({ error: "Szerverhiba a felhasználó lekérésekor." });
+  } catch (error) {
+    console.error("auth/me hiba:", error);
+    res.status(500).json({
+      error: "Szerverhiba a felhasználó lekérésekor."
+    });
   }
 });
 

@@ -3,63 +3,54 @@ import { getAuth } from "firebase/auth";
 import BookCard from "../components/BookCard";
 
 export default function MyDigitalBooks() {
-  const [purchases, setPurchases] = useState([]); // Vásárolt digitális könyvek listája
-  const [loading, setLoading] = useState(true);   // Betöltés állapot
+  const [purchases, setPurchases] = useState([]);
+  const [loading, setLoading] = useState(true);
   const auth = getAuth();
 
-// Vásárlások lekérése a backendről
-const fetchPurchases = async () => {
-  try {
-    const user = auth.currentUser;
-    if (!user) {
+  // Vásárolt digitális könyvek lekérése
+  const fetchPurchases = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const token = await user.getIdToken();
+      const res = await fetch("http://localhost:3001/user/purchases", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        console.error("Vásárlások lekérdezése sikertelen:", res.status);
+        return;
+      }
+
+      const data = await res.json();
+
+      const digitalOnly = data.filter(
+        (item) => item.item_type === "ebook" || item.item_type === "audiobook"
+      );
+
+      const formatted = digitalOnly.map((item) => ({
+        ...item,
+        cover_image_url: item.cover_image_url?.startsWith("http")
+          ? item.cover_image_url
+          : `http://localhost:3001${item.cover_image_url || ""}`,
+      }));
+
+      setPurchases(formatted);
+    } catch (err) {
+      console.error("Vásárlások lekérdezési hiba:", err);
+    } finally {
       setLoading(false);
-      return;
     }
+  };
 
-    const token = await user.getIdToken();
-
-    const res = await fetch("http://localhost:3001/user/purchases", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      console.error("Hiba a vásárlások lekérdezésekor:", res.status);
-      setLoading(false);
-      return;
-    }
-
-    const data = await res.json();
-
-    // ✅ Csak a digitális könyvek (ebook, audiobook) megjelenítése
-    const digitalOnly = data.filter(
-      (item) => item.item_type === "ebook" || item.item_type === "audiobook"
-    );
-
-    // URL formázás
-    const formatted = digitalOnly.map((item) => ({
-      ...item,
-      cover_image_url: item.cover_image_url?.startsWith("http")
-        ? item.cover_image_url
-        : `http://localhost:3001${item.cover_image_url || ""}`,
-    }));
-
-    setPurchases(formatted);
-  } catch (err) {
-    console.error("Hiba a vásárlások lekérdezésekor:", err);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // Betöltéskor lekérdezés
   useEffect(() => {
     fetchPurchases();
   }, []);
 
-  // Betöltés közben
   if (loading) {
     return <p className="text-center py-10 text-gray-500">Betöltés...</p>;
   }
@@ -70,13 +61,11 @@ const fetchPurchases = async () => {
         Megvásárolt digitális könyveim
       </h1>
 
-      {/* Ha nincs vásárlás */}
       {purchases.length === 0 ? (
         <p className="text-gray-600">
           Még nem vásároltál e-könyvet vagy hangoskönyvet.
         </p>
       ) : (
-        // Vásárolt digitális könyvek listázása
         <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {purchases.map((book) => (
             <BookCard key={book.purchase_id || book.id} book={book} />

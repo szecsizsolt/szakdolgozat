@@ -5,12 +5,12 @@ import fs from "fs";
 
 const router = express.Router();
 
-// Fájlnév tisztítás – ékezetek és speciális karakterek eltávolítása
+// Fájlnév normalizálása és tisztítása
 function sanitizeFileName(filename) {
   return filename
-    .normalize("NFD") // lebontja az ékezeteket
-    .replace(/[\u0300-\u036f]/g, "") // törli az ékezeteket
-    .replace(/[^\w.-]/g, "_"); // nem engedélyezett karakter helyett _
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w.-]/g, "_");
 }
 
 // Feltöltési mappa létrehozása, ha nem létezik
@@ -19,52 +19,44 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Multer konfiguráció – fájlok egyedi névvel mentése
+// Multer tárhely konfiguráció egyedi fájlnevekkel
 const storage = multer.diskStorage({
   destination: uploadDir,
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     const safeName = sanitizeFileName(file.originalname);
     const uniqueName = `${Date.now()}-${safeName}`;
     cb(null, uniqueName);
-  },
+  }
 });
 
 const upload = multer({ storage });
 
-// E-könyv feltöltés (PDF/TXT)
 router.post("/upload/ebook", upload.single("file"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "Nincs fájl feltöltve." });
   }
 
   const file = req.file;
-  const fileUrl = `/uploads/${file.filename}`;
-  const fileFormat = path.extname(file.originalname).slice(1).toLowerCase();
-  const fileSizeMb = (file.size / 1024 / 1024).toFixed(2);
 
   res.status(201).json({
-    file_url: fileUrl,
-    file_format: fileFormat,
-    file_size_mb: parseFloat(fileSizeMb),
+    file_url: `/uploads/${file.filename}`,
+    file_format: path.extname(file.originalname).slice(1).toLowerCase(),
+    file_size_mb: parseFloat((file.size / 1024 / 1024).toFixed(2))
   });
 });
 
-// Hangoskönyv feltöltés (MP3)
 router.post("/upload/audio", upload.single("audio"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "Nincs fájl feltöltve." });
   }
 
   const file = req.file;
-  const audioUrl = `/uploads/${file.filename}`;
-  const fileFormat = path.extname(file.originalname).slice(1).toLowerCase();
-  const fileSizeMb = (file.size / 1024 / 1024).toFixed(2);
 
   res.status(201).json({
-    audio_url: audioUrl,
-    file_format: fileFormat,
-    file_size_mb: parseFloat(fileSizeMb),
-    duration_min: 3.5, // ideiglenes érték
+    audio_url: `/uploads/${file.filename}`,
+    file_format: path.extname(file.originalname).slice(1).toLowerCase(),
+    file_size_mb: parseFloat((file.size / 1024 / 1024).toFixed(2)),
+    duration_min: 3.5
   });
 });
 

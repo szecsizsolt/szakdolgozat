@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
 
 export default function Orders() {
-  const [orders, setOrders] = useState([]);      // Rendelések listája
-  const [loading, setLoading] = useState(true);  // Betöltés állapot
-  const [error, setError] = useState(null);      // Hibaüzenet (ha van)
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const auth = getAuth();
 
+  // Rendelések lekérése admin végpontról
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -17,21 +18,18 @@ export default function Orders() {
           return;
         }
 
-        // Firebase token megszerzése
         const token = await user.getIdToken();
-
-        // Rendelések lekérése admin végpontról
         const res = await fetch("http://localhost:3001/orders/admin/orders", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!res.ok) throw new Error("Nem sikerült lekérni a rendeléseket.");
+        if (!res.ok) throw new Error("Lekérési hiba");
 
         const data = await res.json();
         setOrders(data);
       } catch (err) {
-        console.error("Hiba rendelés betöltésekor:", err);
-        setError("Hiba történt a rendelés betöltése közben.");
+        console.error("Rendelés betöltési hiba:", err);
+        setError("Hiba történt a rendelések betöltésekor.");
       } finally {
         setLoading(false);
       }
@@ -40,8 +38,13 @@ export default function Orders() {
     fetchOrders();
   }, [auth]);
 
-  if (loading) return <p className="text-center mt-10">Betöltés...</p>;
-  if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
+  if (loading) {
+    return <p className="text-center mt-10">Betöltés...</p>;
+  }
+
+  if (error) {
+    return <p className="text-center text-red-600 mt-10">{error}</p>;
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
@@ -57,7 +60,6 @@ export default function Orders() {
             key={order.id}
             className="bg-white border border-yellow-300 shadow-md p-6 rounded-xl mb-6"
           >
-            {/* Rendelés adatai */}
             <div className="mb-4">
               <p className="font-bold text-lg text-green-900">
                 Rendelés azonosító: {order.id}
@@ -74,13 +76,13 @@ export default function Orders() {
               </p>
             </div>
 
-            {/* Tétellista */}
             <div className="border-t pt-4">
-              <h2 className="font-semibold mb-2 text-gray-800">Tételek:</h2>
+              <h2 className="font-semibold mb-2 text-gray-800">Tételek</h2>
               <ul className="space-y-2">
                 {order.items.map((item, index) => (
                   <li key={index} className="text-sm text-gray-700">
-                    • {item.title} ({item.item_type}) – {item.quantity} db × {item.price_each} Ft
+                    • {item.title} ({item.item_type}) – {item.quantity} db ×{" "}
+                    {item.price_each} Ft
                   </li>
                 ))}
               </ul>

@@ -5,26 +5,15 @@ import NewsletterSignup from "../components/NewsletterSignup";
 import SearchBar from "../components/SearchBar";
 import RecommendedBooks from "../components/RecommendedBooks";
 
-// Főoldal komponens
+// Főoldal
 const Home = () => {
   return (
     <div className="max-w-screen-xl mx-auto px-4 space-y-10 py-6">
-      {/* Keresőmező a könyvekhez */}
       <SearchBar />
-
-      {/* Kiemelt bannerek/képek slider */}
       <Carousel />
-
-      {/* Kategória választó slider */}
       <CategorySlider />
-
-      {/* Ajánlott könyvek szekció */}
       <RecommendedBooks />
-
-      {/* Vásárlói vélemények */}
       <CustomerReviews />
-
-      {/* Hírlevél feliratkozás */}
       <NewsletterSignup />
     </div>
   );

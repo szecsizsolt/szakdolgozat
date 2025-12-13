@@ -11,7 +11,6 @@ export async function ensureUserInDatabase(req, res, next) {
     );
 
     if (result.rows.length === 0) {
-      // Ha nincs a DB-ben, akkor beszúrjuk
       await pool.query(
         `INSERT INTO users (id, name, email, firebase_uid)
          VALUES ($1, $2, $3, $4)`,

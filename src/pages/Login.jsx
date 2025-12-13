@@ -11,37 +11,28 @@ export default function Login() {
 
   const navigate = useNavigate();
 
-  // Bejelentkezés kezelése
+  // Bejelentkezés
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      // Firebase hitelesítés e-mail és jelszó alapján
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
 
-      // Felhasználó szerepkörének lekérdezése Firestore-ból
       const docRef = doc(db, "users", uid);
       const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        const role = userData.role;
-
-        // Szerepkör tárolása localStorage-ben (opcionális)
-        localStorage.setItem("role", role);
-
-        alert("Sikeres bejelentkezés!");
-
-        // Navigálás szerepkör alapján
-        if (role === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
-      } else {
-        alert("Nincs jogosultság (a felhasználóhoz nem tartozik dokumentum).");
+      if (!docSnap.exists()) {
+        alert("Nincs jogosultság ehhez a fiókhoz.");
+        return;
       }
+
+      const { role } = docSnap.data();
+      localStorage.setItem("role", role);
+
+      alert("Sikeres bejelentkezés!");
+
+      navigate(role === "admin" ? "/admin" : "/");
     } catch (error) {
       console.error("Bejelentkezési hiba:", error);
       alert("Hiba történt: " + error.message);
@@ -54,7 +45,6 @@ export default function Login() {
         Bejelentkezés
       </h2>
 
-      {/* Bejelentkezési űrlap */}
       <form onSubmit={handleLogin} className="space-y-5">
         <input
           type="email"

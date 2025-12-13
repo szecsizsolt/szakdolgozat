@@ -1,22 +1,23 @@
 import { Link } from "react-router-dom";
 import { FaShoppingCart } from "react-icons/fa";
-import { addToCartBackend } from "../utils/cart";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
-import placeholderImage from "../assets/peldakonyv.png";
-import { useCart } from "../context/CartContext";
 
+import { addToCartBackend } from "../utils/cart";
+import { useCart } from "../context/CartContext";
+import placeholderImage from "../assets/peldakonyv.png";
 
 export default function BookCard({ book }) {
   const bookId = book.id;
-  const [alreadyPurchased, setAlreadyPurchased] = useState(false);
-  const [discount, setDiscount] = useState(null); // 🎯 akció adatok
-  const [finalPrice, setFinalPrice] = useState(book.price);
+
   const auth = getAuth();
   const { incrementCart } = useCart();
 
+  const [alreadyPurchased, setAlreadyPurchased] = useState(false);
+  const [discount, setDiscount] = useState(null);
+  const [finalPrice, setFinalPrice] = useState(book.price);
 
-  // 🔍 Ellenőrzés: a user már megvette-e
+  // Ellenőrzi, hogy a felhasználó megvásárolta-e a könyvet
   useEffect(() => {
     const checkPurchase = async () => {
       const user = auth.currentUser;
@@ -25,13 +26,14 @@ export default function BookCard({ book }) {
       try {
         const token = await user.getIdToken();
         const res = await fetch("http://localhost:3001/user/purchases", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         if (!res.ok) return;
-        const data = await res.json();
 
+        const data = await res.json();
         const currentType = (book.type || "").toLowerCase();
+
         const purchased = data.some((item) => {
           const itemType = (item.item_type || "").toLowerCase();
           return (
@@ -43,23 +45,26 @@ export default function BookCard({ book }) {
         });
 
         setAlreadyPurchased(purchased);
-      } catch (err) {
-        console.error("Vásárlás ellenőrzési hiba:", err);
+      } catch (error) {
+        console.error("Vásárlás ellenőrzési hiba:", error);
       }
     };
 
     checkPurchase();
   }, [auth, bookId, book.type]);
 
-  // 💰 Akció lekérdezése a backendről
+  // Akció lekérdezése
   useEffect(() => {
     const fetchDiscount = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/discounts/book/${bookId}`);
-        if (!res.ok) return; // ha nincs akció, vagy 404
+        const res = await fetch(
+          `http://localhost:3001/api/discounts/book/${bookId}`
+        );
+        if (!res.ok) return;
+
         const data = await res.json();
 
-        if (data && data.value) {
+        if (data?.value) {
           setDiscount(data.value);
           const newPrice = book.price - (book.price * data.value) / 100;
           setFinalPrice(Number(newPrice.toFixed(2)));
@@ -67,15 +72,14 @@ export default function BookCard({ book }) {
           setDiscount(null);
           setFinalPrice(book.price);
         }
-      } catch (err) {
-        console.error("Akció lekérdezési hiba:", err);
+      } catch (error) {
+        console.error("Akció lekérdezési hiba:", error);
       }
     };
 
     fetchDiscount();
   }, [bookId, book.price]);
 
-  // 🛒 Kosárhoz adás
   const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -87,24 +91,32 @@ export default function BookCard({ book }) {
 
     try {
       await addToCartBackend(bookId, 1, book.type);
-      incrementCart(); // 🔥 kosár számláló frissítése
+      incrementCart();
       alert("Kosárba helyezve!");
-    } catch (err) {
-      console.error("Kosárba helyezési hiba:", err);
-      alert("Hiba: " + err.message);
+    } catch (error) {
+      console.error("Kosárba helyezési hiba:", error);
+      alert("Hiba: " + error.message);
     }
   };
 
-  // 📘 Könyv típus megjelenítése
   const renderType = () => {
-    switch (book.type) {
-      case "ebook":
-        return <p className="text-sm text-blue-600 font-semibold">E-könyv</p>;
-      case "audiobook":
-        return <p className="text-sm text-purple-600 font-semibold">Hangoskönyv</p>;
-      default:
-        return <p className="text-sm text-gray-700 font-semibold">Hagyományos könyv</p>;
+    if (book.type === "ebook") {
+      return <p className="text-sm text-blue-600 font-semibold">E-könyv</p>;
     }
+
+    if (book.type === "audiobook") {
+      return (
+        <p className="text-sm text-purple-600 font-semibold">
+          Hangoskönyv
+        </p>
+      );
+    }
+
+    return (
+      <p className="text-sm text-gray-700 font-semibold">
+        Hagyományos könyv
+      </p>
+    );
   };
 
   return (
@@ -112,10 +124,10 @@ export default function BookCard({ book }) {
       to={`/book/${bookId}`}
       className="transform hover:scale-105 transition duration-300 block relative"
     >
-      <div 
-      data-testid="book-card"
-      className="bg-[#fefae0] p-5 rounded-2xl shadow-xl hover:shadow-2xl text-center h-full border border-yellow-300 relative overflow-hidden">
-        {/* 🔴 Akció szalag — csak ha van akció és a könyvet még nem vették meg */}
+      <div
+        data-testid="book-card"
+        className="bg-[#fefae0] p-5 rounded-2xl shadow-xl hover:shadow-2xl text-center h-full border border-yellow-300 relative overflow-hidden"
+      >
         {discount && !alreadyPurchased && (
           <div className="absolute top-0 left-0 bg-red-600 text-white font-bold text-xs px-3 py-1 rounded-br-lg shadow-md z-10">
             -{discount}%
@@ -131,13 +143,13 @@ export default function BookCard({ book }) {
         <h4 data-testid="book-title" className="text-lg font-bold text-green-900">
           {book.title}
         </h4>
+
         <p className="text-sm text-gray-600">
           Szerző: {book.author || "Ismeretlen"}
         </p>
 
         {renderType()}
 
-        {/* 💵 Ár megjelenítés akcióval — csak ha nincs megvéve */}
         <div className="mt-2 mb-3">
           {discount && !alreadyPurchased ? (
             <>
@@ -156,7 +168,8 @@ export default function BookCard({ book }) {
         </div>
 
         <p className="text-yellow-600 text-sm font-semibold mb-1">
-          ⭐ {Number(book.average_rating ?? book.avg_rating ?? 0).toFixed(1)} / 5
+          ⭐{" "}
+          {Number(book.average_rating ?? book.avg_rating ?? 0).toFixed(1)} / 5
         </p>
 
         <div className="flex justify-center">
@@ -164,12 +177,11 @@ export default function BookCard({ book }) {
             data-testid="add-to-cart-btn"
             onClick={handleAddToCart}
             disabled={alreadyPurchased}
-            className={`px-6 py-2 rounded-lg flex items-center gap-2 shadow transition
-              ${
-                alreadyPurchased
-                  ? "bg-gray-400 text-gray-700"
-                  : "bg-green-600 hover:bg-green-700 text-white"
-              }`}
+            className={`px-6 py-2 rounded-lg flex items-center gap-2 shadow transition ${
+              alreadyPurchased
+                ? "bg-gray-400 text-gray-700"
+                : "bg-green-600 hover:bg-green-700 text-white"
+            }`}
           >
             <FaShoppingCart />
             {alreadyPurchased ? "Már megvásárolva" : "Kosárba"}

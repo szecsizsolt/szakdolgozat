@@ -10,11 +10,11 @@ import { authenticate, isAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Publikus végpontok
+//Hangoskönyvek lekérdezése.
 router.get("/", getAllAudiobooks);
 router.get("/:id", getAudiobookById);
 
-// Admin-only végpontok
+//Hangoskönyvek kezelése admin jogosultsággal.
 router.post("/full", authenticate, isAdmin, createAudiobook);
 router.patch("/:id", authenticate, isAdmin, updateAudiobook);
 router.delete("/:id", authenticate, isAdmin, deleteAudiobook);

@@ -21,7 +21,7 @@ export default function BookDetails() {
   const auth = getAuth();
   const { incrementCart } = useCart();
 
-  // ⭐ Könyv betöltése
+  // Könyv adatok betöltése
   useEffect(() => {
     fetch(`${API_URL}/books/${id}`)
       .then((res) => res.json())
@@ -34,29 +34,26 @@ export default function BookDetails() {
       .catch(() => alert("Nem sikerült betölteni a könyv adatokat."));
   }, [id]);
 
-  // ⭐ Akció lekérése
+  // Aktív akció lekérése
   useEffect(() => {
     if (!book) return;
 
     fetch(`${API_URL}/api/discounts/book/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("No discount");
-        return res.json();
-      })
-      .then((data) => setDiscount(data))
-      .catch(() => setDiscount(null)); // ha nincs akció
+      .then((res) => (res.ok ? res.json() : null))
+      .then(setDiscount)
+      .catch(() => setDiscount(null));
   }, [book, id]);
 
-  // ⭐ Vélemények lekérése
+  // Vélemények betöltése
   useEffect(() => {
     fetch(`${API_URL}/reviews/${id}`)
       .then((res) => res.json())
-      .then((data) => setComments(data));
+      .then(setComments);
   }, [id]);
 
-  // ⭐ Aktuális user ID
+  // Bejelentkezett felhasználó azonosító
   useEffect(() => {
-    const fetchUserId = async () => {
+    const loadUser = async () => {
       const user = auth.currentUser;
       if (!user) return;
 
@@ -71,28 +68,29 @@ export default function BookDetails() {
       }
     };
 
-    fetchUserId();
+    loadUser();
   }, [auth]);
 
-  // ⭐ Vásárlás ellenőrzése
+  // Vásárlás ellenőrzése digitális tartalomhoz
   useEffect(() => {
     const checkPurchase = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
+      const user = auth.currentUser;
+      if (!user) return;
 
+      try {
         const token = await user.getIdToken();
         const res = await fetch(`${API_URL}/user/purchases`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const data = await res.json();
-        const hasPurchased = data.some(
+        const purchased = data.some(
           (item) =>
             item.id === id &&
             (item.item_type === "ebook" || item.item_type === "audiobook")
         );
-        setHasAccess(hasPurchased);
+
+        setHasAccess(purchased);
       } catch (err) {
         console.error(err);
       }
@@ -101,19 +99,16 @@ export default function BookDetails() {
     checkPurchase();
   }, [id, auth]);
 
-  // ⭐ Olvasás gomb
   const handleRead = () => {
     if (book.type === "ebook") navigate(`/ebook/${book.id}`);
     if (book.type === "audiobook") navigate(`/audiobook/${book.id}`);
   };
 
-  // ⭐ Discount logika
   const hasDiscount = discount && discount.value > 0;
   const discountedPrice = hasDiscount
     ? Math.round(book.price * (1 - discount.value / 100))
     : null;
 
-  // ⭐ Vélemény mentés
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!comment.trim()) return;
@@ -125,7 +120,6 @@ export default function BookDetails() {
     }
 
     const token = await user.getIdToken();
-
     const res = await fetch(`${API_URL}/reviews/${id}`, {
       method: "POST",
       headers: {
@@ -145,35 +139,31 @@ export default function BookDetails() {
     }
   };
 
-  // ⭐ Vélemény törlése
   const handleDelete = async (reviewId) => {
     const user = auth.currentUser;
     if (!user) return;
 
     const token = await user.getIdToken();
-
     const res = await fetch(`${API_URL}/reviews/${reviewId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
 
     if (res.ok) {
-      setComments(comments.filter((c) => c.id !== reviewId));
+      setComments((prev) => prev.filter((c) => c.id !== reviewId));
     }
   };
 
-  // ⭐ Kosárba adás
   const handleAddToCart = async () => {
     try {
       await addToCartBackend(book.id, 1, book.type);
       incrementCart();
       alert("Kosárba helyezve!");
-    } catch (err) {
+    } catch {
       alert("Hiba történt.");
     }
   };
 
-  // ⭐ Ha adat még töltődik
   if (!book) {
     return <p className="text-center mt-10">Betöltés...</p>;
   }
@@ -188,7 +178,6 @@ export default function BookDetails() {
         />
 
         <div className="flex-1 space-y-4 relative w-full">
-          {/* ⭐ Árak megjelenítése */}
           <div className="absolute right-0 top-0 flex flex-col items-end gap-2">
             {!hasAccess && hasDiscount ? (
               <>
@@ -196,8 +185,9 @@ export default function BookDetails() {
                   {book.price} Ft
                 </p>
                 <p className="text-2xl font-bold text-green-700">
-                  {discountedPrice} Ft{" "}
+                  {discountedPrice} Ft
                   <span className="text-red-600 text-sm font-semibold">
+                    {" "}
                     (−{discount.value}%)
                   </span>
                 </p>
@@ -208,7 +198,6 @@ export default function BookDetails() {
               </p>
             )}
 
-            {/* ⭐ Kosárba */}
             {!hasAccess && (
               <button
                 onClick={handleAddToCart}
@@ -218,14 +207,6 @@ export default function BookDetails() {
               </button>
             )}
 
-            {/* ⭐ Akció címke */}
-            {hasDiscount && !hasAccess && (
-              <div className="bg-red-600 text-white font-bold text-sm px-3 py-1 rounded-full shadow">
-                Akció
-              </div>
-            )}
-
-            {/* ⭐ Olvasás gomb */}
             {(book.type === "ebook" || book.type === "audiobook") && (
               <button
                 onClick={handleRead}
@@ -241,7 +222,6 @@ export default function BookDetails() {
             )}
           </div>
 
-          {/* ⭐ Könyv információk */}
           <h1 className="text-3xl font-bold text-green-900 pr-40">
             {book.title}
           </h1>
@@ -270,7 +250,6 @@ export default function BookDetails() {
         </div>
       </div>
 
-      {/* ⭐ Vélemények */}
       <section className="space-y-4">
         <h2 className="text-xl font-bold text-green-900">Értékelés</h2>
 
@@ -303,7 +282,6 @@ export default function BookDetails() {
         </form>
       </section>
 
-      {/* ⭐ Vélemény lista */}
       {comments.length > 0 && (
         <section className="space-y-6 mt-10">
           <h3 className="text-xl font-bold text-green-900">
@@ -337,7 +315,9 @@ export default function BookDetails() {
 
                 <p className="text-gray-700">{c.comment}</p>
 
-                <p className="text-xs text-gray-500 mt-1">– {c.display_name}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  – {c.display_name}
+                </p>
               </div>
             ))}
           </div>

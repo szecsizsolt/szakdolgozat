@@ -8,17 +8,17 @@ router.post("/create-checkout-session", async (req, res) => {
   try {
     const { cartItems } = req.body;
 
-    console.log("📦 Stripe request items:", cartItems);
-
     const lineItems = cartItems.map(item => ({
       price_data: {
         currency: "huf",
         product_data: {
-          name: item.title,
+          name: item.title
         },
-        unit_amount: Math.round(((item.final_price ?? item.price) * 100)),
+        unit_amount: Math.round(
+          (item.final_price ?? item.price) * 100
+        )
       },
-      quantity: item.quantity,
+      quantity: item.quantity
     }));
 
     const session = await stripe.checkout.sessions.create({
@@ -26,16 +26,13 @@ router.post("/create-checkout-session", async (req, res) => {
       line_items: lineItems,
       mode: "payment",
       success_url: "http://localhost:5173/payment/success",
-      cancel_url: "http://localhost:5173/payment/fail",
+      cancel_url: "http://localhost:5173/payment/fail"
     });
 
-    console.log("🔗 Stripe session URL:", session.url);
-
     res.json({ url: session.url });
-
-  } catch (err) {
-    console.error("❌ Stripe error:", err);
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error("Stripe error:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 

@@ -8,17 +8,17 @@ export default function PaymentSuccess() {
   const { setCart } = useCart();
   const hasRun = useRef(false);
 
+  // Rendelés rögzítése fizetés után (csak egyszer)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
+      if (!user || hasRun.current) return;
 
-      if (hasRun.current) return;
       hasRun.current = true;
 
       try {
         const token = await user.getIdToken();
 
-        const orderRes = await fetch("http://localhost:3001/orders", {
+        const res = await fetch("http://localhost:3001/orders", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -26,11 +26,11 @@ export default function PaymentSuccess() {
           },
         });
 
-        if (orderRes.ok) {
+        if (res.ok) {
           setCart(0);
         }
       } catch (err) {
-        console.error("Fizetés utáni feldolgozás hibája:", err);
+        console.error("Fizetés utáni feldolgozási hiba:", err);
       }
     });
 
@@ -39,8 +39,13 @@ export default function PaymentSuccess() {
 
   return (
     <div className="text-center p-10">
-      <h1 className="text-3xl font-bold text-green-700">Sikeres fizetés!</h1>
-      <p className="mt-4 text-lg">A rendelést feldolgoztuk.</p>
+      <h1 className="text-3xl font-bold text-green-700">
+        Sikeres fizetés!
+      </h1>
+
+      <p className="mt-4 text-lg">
+        A rendelést feldolgoztuk.
+      </p>
 
       <Link
         to="/"

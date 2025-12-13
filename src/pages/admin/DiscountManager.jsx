@@ -1,60 +1,71 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "../../firebase";
 
 const CATEGORY_OPTIONS = [
-  "Szépirodalom", "Ismeretterjesztő", "Krimi", "Romantikus",
-  "Sci-fi", "Fantasy", "Életrajz", "Önfejlesztés", "Történelem",
-  "Gyermekkönyv", "Ifjúsági", "Thriller", "Üzleti",
-  "Egészség és életmód", "Utazás",
+  "Szépirodalom",
+  "Ismeretterjesztő",
+  "Krimi",
+  "Romantikus",
+  "Sci-fi",
+  "Fantasy",
+  "Életrajz",
+  "Önfejlesztés",
+  "Történelem",
+  "Gyermekkönyv",
+  "Ifjúsági",
+  "Thriller",
+  "Üzleti",
+  "Egészség és életmód",
+  "Utazás"
 ];
 
 export default function DiscountManager() {
-  const [books, setBooks] = useState([]);
-  const [selected, setSelected] = useState([]);
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Összes");
-  const [discountValue, setDiscountValue] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [discounts, setDiscounts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [discountName, setDiscountName] = useState("");
-
-
   const API_BASE = "http://localhost:3001";
   const ITEMS_PER_PAGE = 10;
 
-  // ===== Könyvek lekérése =====
+  const [books, setBooks] = useState([]);
+  const [discounts, setDiscounts] = useState([]);
+  const [selected, setSelected] = useState([]);
+
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Összes");
+
+  const [discountValue, setDiscountValue] = useState("");
+  const [discountName, setDiscountName] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+
+  // Könyvek lekérése
   const fetchBooks = async () => {
     setLoading(true);
     try {
       const token = await auth.currentUser.getIdToken();
       const res = await fetch(`${API_BASE}/api/discounts/books`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Könyvlekérés hiba");
-      const data = await res.json();
-      setBooks(data);
+      setBooks(await res.json());
     } catch (err) {
-      console.error("❌ Hiba a könyvek lekérdezésekor:", err);
+      console.error("Hiba a könyvek lekérdezésekor:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // ===== Akciók lekérése =====
+  // Akciók lekérése
   const fetchDiscounts = async () => {
     try {
       const token = await auth.currentUser.getIdToken();
       const res = await fetch(`${API_BASE}/api/discounts`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Akciólekérés hiba");
-      const data = await res.json();
-      setDiscounts(data);
+      setDiscounts(await res.json());
     } catch (err) {
-      console.error("❌ Hiba az akciók lekérdezésekor:", err);
+      console.error("Hiba az akciók lekérdezésekor:", err);
     }
   };
 
@@ -63,14 +74,16 @@ export default function DiscountManager() {
     fetchDiscounts();
   }, []);
 
-  // ===== Keresés + szűrés + lapozás =====
+  // Szűrés és keresés
   const filteredBooks = books.filter((book) => {
     const matchesCategory =
       selectedCategory === "Összes" ||
       (book.categories || []).includes(selectedCategory);
+
     const matchesSearch = (book.title || "")
       .toLowerCase()
       .includes(search.toLowerCase());
+
     return matchesCategory && matchesSearch;
   });
 
@@ -80,26 +93,28 @@ export default function DiscountManager() {
     page * ITEMS_PER_PAGE
   );
 
-  // ===== Kijelölés kezelése =====
+  // Kijelölés
   const toggleSelect = (id) => {
     setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id]
     );
   };
 
   const toggleSelectAll = () => {
     const allIds = filteredBooks.map((b) => b.id);
-    if (allIds.every((id) => selected.includes(id))) {
-      // Ha mind ki van jelölve → töröljük mindet
-      setSelected(selected.filter((id) => !allIds.includes(id)));
-    } else {
-      // Kijelölünk minden, jelenleg szűrt könyvet (nem csak az aktuális oldalt)
-      setSelected([...new Set([...selected, ...allIds])]);
-    }
+    const allSelected = allIds.every((id) => selected.includes(id));
+
+    setSelected(
+      allSelected
+        ? selected.filter((id) => !allIds.includes(id))
+        : [...new Set([...selected, ...allIds])]
+    );
   };
 
-  // ===== Akció alkalmazása =====
-    const applyDiscount = async () => {
+  // Akció alkalmazása
+  const applyDiscount = async () => {
     if (!discountValue || selected.length === 0) {
       alert("Adj meg százalékot és válassz könyveket!");
       return;
@@ -113,61 +128,59 @@ export default function DiscountManager() {
 
     try {
       const token = await auth.currentUser.getIdToken();
-      const finalName = discountName
-        ? discountName         
-        : `Kedvezmény`;  
+      const name = discountName || "Kedvezmény";
 
       const res = await fetch(`${API_BASE}/api/discounts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          name: finalName,
+          name,
           value,
-          book_ids: selected,
-        }),
+          book_ids: selected
+        })
       });
 
       if (!res.ok) throw new Error(await res.text());
 
-      alert("✅ Akció sikeresen létrehozva!");
+      alert("Akció sikeresen létrehozva!");
       setSelected([]);
       setDiscountValue("");
-      setDiscountName("");        // <-- 🔥 EZ HIÁNYZOTT!
+      setDiscountName("");
+
       fetchBooks();
       fetchDiscounts();
     } catch (err) {
-      console.error("❌ Hiba az akció létrehozásakor:", err);
+      console.error("Hiba az akció létrehozásakor:", err);
       alert("Hiba történt az akció létrehozásakor.");
     }
   };
 
-
-  // ===== Akció törlése =====
+  // Akció törlése
   const deleteDiscount = async (id) => {
     if (!window.confirm("Biztosan törlöd ezt az akciót?")) return;
+
     try {
       const token = await auth.currentUser.getIdToken();
       const res = await fetch(`${API_BASE}/api/discounts/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error("Törlés sikertelen");
-      fetchDiscounts();
+
       fetchBooks();
+      fetchDiscounts();
     } catch (err) {
-      console.error("❌ Hiba az akció törlésekor:", err);
+      console.error("Hiba az akció törlésekor:", err);
       alert("Hiba történt az akció törlésekor.");
     }
   };
 
-  // ===== Élő keresés =====
+  // Lapozás reset keresésnél
   useEffect(() => {
-    const delay = setTimeout(() => {
-      setPage(1);
-    }, 300);
+    const delay = setTimeout(() => setPage(1), 300);
     return () => clearTimeout(delay);
   }, [search, selectedCategory]);
 
@@ -177,7 +190,6 @@ export default function DiscountManager() {
         Admin felület – Akciókezelő
       </h1>
 
-      {/* Keresőmező */}
       <input
         type="text"
         placeholder="Keresés cím alapján..."
@@ -186,7 +198,6 @@ export default function DiscountManager() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {/* Kategória szűrés */}
       <div className="flex flex-wrap gap-3 mb-6">
         <button
           onClick={() => setSelectedCategory("Összes")}
@@ -198,6 +209,7 @@ export default function DiscountManager() {
         >
           Összes
         </button>
+
         {CATEGORY_OPTIONS.map((cat) => (
           <button
             key={cat}
@@ -213,10 +225,7 @@ export default function DiscountManager() {
         ))}
       </div>
 
-      {/* Akció beállítás */}
       <div className="flex gap-2 mb-4">
-
-        {/* Akció neve */}
         <input
           type="text"
           placeholder="Akció neve"
@@ -225,7 +234,6 @@ export default function DiscountManager() {
           onChange={(e) => setDiscountName(e.target.value)}
         />
 
-        {/* Kedvezmény érték */}
         <input
           type="number"
           placeholder="% kedvezmény"
@@ -236,15 +244,14 @@ export default function DiscountManager() {
 
         <button
           onClick={applyDiscount}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           disabled={selected.length === 0}
+          className="bg-green-600 text-white px-4 py-2 rounded
+                     hover:bg-green-700 disabled:opacity-50"
         >
           Akció alkalmazása ({selected.length})
         </button>
       </div>
 
-
-      {/* Könyvek táblázata */}
       <div className="overflow-x-auto">
         <table className="min-w-full border">
           <thead className="bg-gray-100">
@@ -266,6 +273,7 @@ export default function DiscountManager() {
               <th className="p-2 border">Akciók</th>
             </tr>
           </thead>
+
           <tbody>
             {loading ? (
               <tr>
@@ -315,12 +323,12 @@ export default function DiscountManager() {
         </table>
       </div>
 
-      {/* Lapozás */}
-      <div className="flex justify-center items-center gap-2 mt-4 text-green-800 font-semibold">
+      <div className="flex justify-center gap-2 mt-4 text-green-800 font-semibold">
         <button
           onClick={() => setPage((p) => Math.max(p - 1, 1))}
           disabled={page === 1}
-          className="px-3 py-1 rounded border border-green-300 hover:bg-green-100 disabled:opacity-40"
+          className="px-3 py-1 rounded border border-green-300
+                     hover:bg-green-100 disabled:opacity-40"
         >
           ←
         </button>
@@ -342,29 +350,35 @@ export default function DiscountManager() {
         <button
           onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
           disabled={page === totalPages}
-          className="px-3 py-1 rounded border border-green-300 hover:bg-green-100 disabled:opacity-40"
+          className="px-3 py-1 rounded border border-green-300
+                     hover:bg-green-100 disabled:opacity-40"
         >
           →
         </button>
       </div>
 
-      {/* Akciók listája */}
       <h2 className="text-xl font-semibold mt-8 mb-2 text-green-900">
-         Aktív akciók
+        Aktív akciók
       </h2>
+
       <div className="border rounded p-3 bg-gray-50">
         {discounts.length === 0 ? (
           <p className="text-gray-500">Nincs aktív akció.</p>
         ) : (
           <ul className="divide-y">
             {discounts.map((d) => (
-              <li key={d.id} className="flex justify-between items-center py-2">
+              <li
+                key={d.id}
+                className="flex justify-between items-center py-2"
+              >
                 <div>
-                  <strong>{d.name}</strong> – {d.value}% ({d.attached_books} könyv)
+                  <strong>{d.name}</strong> – {d.value}% (
+                  {d.attached_books} könyv)
                 </div>
                 <button
                   onClick={() => deleteDiscount(d.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                  className="bg-red-500 text-white px-3 py-1 rounded
+                             text-sm hover:bg-red-600"
                 >
                   Törlés
                 </button>

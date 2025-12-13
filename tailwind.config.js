@@ -5,7 +5,7 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {}, // most nem használunk egyedi színeket
+    extend: {}, 
   },
   plugins: [],
 }

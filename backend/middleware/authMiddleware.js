@@ -1,4 +1,3 @@
-// backend/middleware/authMiddleware.js
 import admin from 'firebase-admin';
 import pool from '../db.js';
 
@@ -10,7 +9,6 @@ export async function authenticate(req, res, next) {
   const idToken = authHeader.split('Bearer ')[1];
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    // hozzárendeljük a DB-s usert is
     const { rows } = await pool.query(
       'SELECT id FROM users WHERE firebase_uid = $1 LIMIT 1',
       [decodedToken.uid]
@@ -18,7 +16,7 @@ export async function authenticate(req, res, next) {
     if (rows[0]) {
       req.user = { ...decodedToken, id: rows[0].id };
     } else {
-      req.user = decodedToken; // nincs DB user, de legalább a token megvan
+      req.user = decodedToken; 
     }
     next();
   } catch (error) {
@@ -26,11 +24,11 @@ export async function authenticate(req, res, next) {
   }
 }
 
-// ÚJ: opcionális authentikáció – nem dob hibát, csak ha van token, beállítja req.user.id-t
+
 export async function optionalAuthenticate(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
-    return next(); // vendég
+    return next(); 
   }
   const idToken = authHeader.split('Bearer ')[1];
   try {
@@ -45,7 +43,6 @@ export async function optionalAuthenticate(req, res, next) {
       req.user = decodedToken;
     }
   } catch (_) {
-    // rossz/lejárt token -> vendégként tovább
   }
   next();
 }

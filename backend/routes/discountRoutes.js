@@ -13,13 +13,10 @@ import {
 
 const router = express.Router();
 
-// ✅ Nyilvános: akció lekérdezés egy adott könyvhöz
 router.get("/book/:bookId", getDiscountByBookPublic);
 
-// 🔒 Minden más admin joghoz kötött
 router.use(authenticate, isAdmin);
 
-// Akciókezelő admin route-ok
 router.get("/books", listBooksForDiscountManager);
 router.get("/", listDiscounts);
 router.post("/", createPercentageDiscount);

@@ -1,12 +1,11 @@
 import { getAuth } from "firebase/auth";
 
-/**
- * Könyv hozzáadása a kosárhoz
- * @param {string} bookId - könyv ID
- * @param {number} quantity - mennyiség
- * @param {'physical' | 'ebook' | 'audiobook'} itemType - termék típusa
- */
-export async function addToCartBackend(bookId, quantity = 1, itemType = "physical") {
+// Könyv hozzáadása a kosárhoz backend API-n keresztül
+export async function addToCartBackend(
+  bookId,
+  quantity = 1,
+  itemType = "physical"
+) {
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -27,18 +26,17 @@ export async function addToCartBackend(bookId, quantity = 1, itemType = "physica
       body: JSON.stringify({
         book_id: bookId,
         quantity,
-        item_type: itemType, // lehet "physical", "ebook", "audiobook"
+        item_type: itemType,
       }),
     });
 
     if (!res.ok) {
-      const msg = await res.text();
-      throw new Error(msg || "Hiba történt a kosárba rakáskor.");
+      throw new Error(await res.text());
     }
 
     return await res.json();
   } catch (err) {
     console.error("Kosárba adás hiba:", err);
-    alert("Hiba: " + err.message);
+    alert("Nem sikerült a kosárba helyezni a terméket.");
   }
 }

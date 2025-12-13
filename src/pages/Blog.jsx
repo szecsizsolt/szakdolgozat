@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+// Blogbejegyzések listázása
 const Blog = () => {
   const [posts, setPosts] = useState([]);
 
@@ -16,6 +17,7 @@ const Blog = () => {
       <h1 className="text-3xl font-bold text-center text-olive-800 mb-10">
         Olvasási tippek és blog
       </h1>
+
       <div className="grid md:grid-cols-3 gap-6">
         {posts.map((post) => (
           <div

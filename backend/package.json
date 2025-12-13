@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Online könyvesbolt backend szerver",
+  "description": "könyvesbolt",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -15,8 +15,8 @@
     "backend",
     "könyvesbolt"
   ],
-  "author": "Saját Neved",
-  "license": "MIT",
+  "author": "",
+  "license": "",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
